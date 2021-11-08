@@ -3,13 +3,22 @@
 
 import autograd
 import autograd.numpy as np
+from scipy.stats import norm
 
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
 
 def hamiltonian_fn(coords):
+    # q, p = np.split(coords,2)
+    # mu = 2.0
+    # sigma = 0.15
+    # H = (q-mu)**2/(2*sigma) + p**2/2 # Normal PDF
     q, p = np.split(coords,2)
-    H = 3*(1-np.cos(q)) + p**2 # pendulum hamiltonian
+    mu1 = 1.0
+    mu2 = -1.0
+    sigma = 0.25
+    term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
+    H = term1 + p**2/2 # Normal PDF
     return H
 
 def dynamics_fn(t, coords):
@@ -18,7 +27,7 @@ def dynamics_fn(t, coords):
     S = np.concatenate([dpdt, -dqdt], axis=-1)
     return S
 
-def get_trajectory(t_span=[0,3], timescale=15, radius=None, y0=None, noise_std=0.1, **kwargs):
+def get_trajectory(t_span=[0,20], timescale=20, radius=None, y0=None, noise_std=0.01, **kwargs):
     t_eval = np.linspace(t_span[0], t_span[1], int(timescale*(t_span[1]-t_span[0])))
 
     # get initial state
@@ -27,9 +36,15 @@ def get_trajectory(t_span=[0,3], timescale=15, radius=None, y0=None, noise_std=0
     # if radius is None:
     #     radius = np.random.rand() + 1.3 # sample a range of radii
     if y0 is None:
-        y0 = np.random.rand(2)*4.-1
-    if radius is None:
-        radius = np.random.rand() + 4.1 # sample a range of radii
+        y0 = np.array([0.,0.])
+        if np.random.rand(1)<0.5:
+            y0[0] = norm(loc=1.,scale=0.3).rvs()
+        else:
+            y0[0] = norm(loc=-1.,scale=0.3).rvs()
+        y0[1] = norm(loc=0,scale=2).rvs() # np.random.rand(1)*3-3 #
+        # y0 = np.random.rand(2)*1.5-1.5
+    # if radius is None:
+    #     radius = np.random.rand() + 4.1 # sample a range of radii
     # y0 = y0 / np.sqrt((y0**2).sum()) * radius ## set the appropriate radius
 
     spring_ivp = solve_ivp(fun=dynamics_fn, t_span=t_span, y0=y0, t_eval=t_eval, rtol=1e-10, **kwargs)
@@ -43,7 +58,7 @@ def get_trajectory(t_span=[0,3], timescale=15, radius=None, y0=None, noise_std=0
     p += np.random.randn(*p.shape)*noise_std
     return q, p, dqdt, dpdt, t_eval
 
-def get_dataset(seed=0, samples=200, test_split=0.5, **kwargs):
+def get_dataset(seed=0, samples=20, test_split=1.0, **kwargs):
     data = {'meta': locals()}
 
     # randomly sample inputs

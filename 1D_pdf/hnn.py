@@ -24,12 +24,8 @@ class HNN(torch.nn.Module):
             return self.differentiable_model(x)
 
         y = self.differentiable_model(x)
-        # print(y.dim())
-        # print(y.shape[1])
-        assert y.dim() == 2 and y.shape[1] == 4, "Output tensor should have shape [batch_size, 2]"
-        x1,x2,x3,x4 = (y.split(1,1))
-        # print(torch.cat((x1, x2), 1))
-        return torch.cat((x1, x2), 1), torch.cat((x3, x4), 1)
+        assert y.dim() == 2 and y.shape[1] == 2, "Output tensor should have shape [batch_size, 2]"
+        return y.split(1,1)
 
     def rk4_time_derivative(self, x, dt):
         return rk4(fun=self.time_derivative, y0=x, t=0, dt=dt)
@@ -40,7 +36,6 @@ class HNN(torch.nn.Module):
             return self.differentiable_model(x)
 
         '''NEURAL HAMILTONIAN-STLE VECTOR FIELD'''
-        # print(x)
         F1, F2 = self.forward(x) # traditional forward pass
 
         conservative_field = torch.zeros_like(x) # start out with both components set to 0
@@ -70,7 +65,7 @@ class HNN(torch.nn.Module):
             M *= 1 - torch.eye(n) # clear diagonals
             M[::2] *= -1 # pattern of signs
             M[:,::2] *= -1
-
+    
             for i in range(n): # make asymmetric
                 for j in range(i+1, n):
                     M[i,j] *= -1
