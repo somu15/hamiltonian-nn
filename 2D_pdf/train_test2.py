@@ -17,12 +17,12 @@ from utils import L2_loss, rk4
 def get_args():
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--input_dim', default=4, type=int, help='dimensionality of input tensor')
-    parser.add_argument('--hidden_dim', default=200, type=int, help='hidden dimension of mlp')
-    parser.add_argument('--learn_rate', default=1e-3, type=float, help='learning rate')
+    parser.add_argument('--hidden_dim', default=20, type=int, help='hidden dimension of mlp')
+    parser.add_argument('--learn_rate', default=5e-4, type=float, help='learning rate')
     parser.add_argument('--batch_size', default=2000, type=int, help='batch_size')
     parser.add_argument('--input_noise', default=0.0, type=int, help='std of noise added to inputs')
     parser.add_argument('--nonlinearity', default='tanh', type=str, help='neural net nonlinearity') # tanh
-    parser.add_argument('--total_steps', default=10000, type=int, help='number of gradient steps')
+    parser.add_argument('--total_steps', default=7000, type=int, help='number of gradient steps')
     parser.add_argument('--print_every', default=200, type=int, help='number of gradient steps between prints')
     parser.add_argument('--name', default='2dpdf', type=str, help='only one option right now')
     parser.add_argument('--baseline', dest='baseline', action='store_true', help='run baseline or experiment?')

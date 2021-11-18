@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
+from statsmodels.distributions.empirical_distribution import ECDF
 
 EXPERIMENT_DIR = './2D_pdf'
 sys.path.append(EXPERIMENT_DIR)
@@ -32,15 +33,18 @@ ARROW_WIDTH = 6e-3
 LINE_WIDTH = 2
 RK4 = ''
 
+## Ref: 50; 2 and 200
+
 def get_args():
     return {'input_dim': 4,
          'hidden_dim': 20,
-         'learn_rate': 1e-3,
+         'learn_rate': 5e-4,
          'nonlinearity': 'tanh',
-         'total_steps': 10000,
+         'total_steps': 7000,
          'field_type': 'solenoidal',
          'print_every': 200,
          'name': '2dpdf',
+         'use_rk4' : 'True',
          'gridsize': 10,
          'input_noise': 0.01,
          'seed': 0,
@@ -116,24 +120,90 @@ hnn_model = get_model(args, baseline=False)
 # # base_ivp = integrate_model(base_model, t_span, y0, **kwargs)
 # hnn_ivp = integrate_model(hnn_model, t_span, y0, **kwargs)
 
+# def taylor_sine(x):  # Taylor approximation to sine function
+#     ans = currterm = x
+#     i = 0
+#     while np.abs(currterm) > 0.001:
+#         currterm = -currterm * x**2 / ((2 * i + 3) * (2 * i + 2))
+#         ans = ans + currterm
+#         i += 1
+#     return ans
+
+# def taylor_cosine(x):  # Taylor approximation to cosine function
+#     ans = currterm = 1
+#     i = 0
+#     while np.abs(currterm) > 0.001:
+#         currterm = -currterm * x**2 / ((2 * i + 1) * (2 * i + 2))
+#         ans = ans + currterm
+#         i += 1
+#     return ans
+
 ## HMC with HNN
 
 def hamil(coords):
+    
+    #******** Multimodal Himmelblau function #********
+    # q1, q2, p1, p2 = np.split(coords,4)
+    # term1 = 0.1 * ((q1**2 + q2 - 11)**2 + (q1 + q2**2 - 7)**2)
+    # term2 = 1*p1**2/2+1*p2**2/2
+    # H = term1 + term2
+
+    #******** 2D Gausssian #********
+    # q1, q2, p1, p2 = np.split(coords,4)
+    # mu = np.array([0.,0.])
+    # sigma_inv = np.linalg.inv(np.array([[100.0,2.483],[2.483,0.1]]))
+    # y = np.array([q1-mu[0],q2-mu[1]])
+    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    # term1 = (y[0]*tmp1[0] + y[1]*tmp1[1])/2
+    # term2 = p1**2/2+p2**2/2
+    # H = term1 + term2
+
+    #******** 2D Gausssian (4 mixtures) #********
+    # q1, q2, p1, p2 = np.split(coords,4)
+    # sigma_inv = np.array([[1.,0.],[0.,1.]])
+    # term1 = 0.
+    #
+    # mu = np.array([3.,0.])
+    # y = np.array([q1-mu[0],q2-mu[1]])
+    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    #
+    # mu = np.array([-3.,0.])
+    # y = np.array([q1-mu[0],q2-mu[1]])
+    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    #
+    # mu = np.array([0.,3.])
+    # y = np.array([q1-mu[0],q2-mu[1]])
+    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    #
+    # mu = np.array([0.,-3.])
+    # y = np.array([q1-mu[0],q2-mu[1]])
+    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    #
+    # term1 = -np.log(term1)
+    # term2 = p1**2/2+p2**2/2
+    # H = term1 + term2
+
+    #******** 2D Rosenbrock #********
     q1, q2, p1, p2 = np.split(coords,4)
     a = 1
     b = 100
     p = 20
     term1 = (b*(q2-q1**2)**2+(a-q1)**2)/p
-    term2 = p1**2/2+p2**2/2
+    term2 = 1*p1**2/2+1*p2**2/2
     H = term1 + term2
+    
     return H
 
 L = 4
-N = 100
+N = 1000
 steps = L*400
 t_span = [0,L]
 kwargs = {'t_eval': np.linspace(t_span[0], t_span[1], steps), 'rtol': 1e-3}
-y0 = np.array([2.0, 2.0, norm(loc=0,scale=1).rvs(), norm(loc=0,scale=1).rvs()]) # uniform().rvs()*3.-3.
+y0 = np.array([1.0, 1.0, norm(loc=0,scale=1).rvs(), norm(loc=0,scale=1).rvs()]) # uniform().rvs()*3.-3.
 x_req = np.zeros((N,2))
 x_req[0,:] = y0[0:2]
 accept = np.zeros(N)
@@ -160,8 +230,18 @@ for ii in np.arange(0,N-1,1):
     y0[3] = norm(loc=0,scale=1).rvs()
     print(ii)
 
+hmc1 = x_req[:,0]
+hmc2 = x_req[:,1]
+plt.quiver(hmc1[:-1], hmc2[:-1], hmc1[1:]-hmc1[:-1], hmc2[1:]-hmc2[:-1])
+
+plt.scatter(0.0, 0.0)
+plt.plot(hmc1,hmc2, 'k', linewidth=0.15)
+
+plt.scatter(hmc1,hmc2,s=1)
+
 rk_req = np.zeros((N,2))
 rk_accept = np.zeros(N)
+# y0 = np.array([0.0, 0.0, norm(loc=0,scale=1).rvs(), norm(loc=0,scale=1).rvs()])
 for ii in np.arange(0,N-1,1):
     y0 = HNN_sto[:,0,ii]
     data = get_dataset(y0=y0, samples=1, test_split=1.0)
@@ -170,77 +250,30 @@ for ii in np.arange(0,N-1,1):
     H_prev = hamil(y0)
     alpha = np.minimum(1,np.exp(H_prev - H_star))
     if alpha > uniform().rvs():
+        # y0[0:2] = data.get("coords")[steps-1,0:2]
         rk_req[ii+1,0] = data.get("coords")[steps-1,0]
         rk_req[ii+1,1] = data.get("coords")[steps-1,1]
         rk_accept[ii+1] = 1
     else:
         rk_req[ii+1,:] = y0[0:2]
+    # y0[2] = norm(loc=0,scale=1).rvs() # uniform().rvs()*3.-3. #
+    # y0[3] = norm(loc=0,scale=1).rvs()
     print(ii)
 
-plt.scatter(rk_req[:,0],rk_req[:,1],label='RK 4')
-plt.scatter(x_req[:,0],x_req[:,1], label='Hamil. NNs')
+plt.scatter(rk_req[:,0],rk_req[:,1],label='Runge Kutta 4')
+plt.scatter(x_req[:,0],x_req[:,1], label='Hamil. Neural ODE')
 plt.xlabel('x-coord')
 plt.ylabel('y-coord')
 plt.legend()
 
-# ind_req = 50
-# plt.plot(RK[:,0,ind_req],RK[:,1,ind_req],label='RK 4')
-# plt.plot(HNN_sto[0,:,ind_req],HNN_sto[1,:,ind_req], label='Hamil. NNs')
-# plt.xlabel('x-coord')
-# plt.ylabel('y-coord')
-# plt.legend()
+ind_req = 77
+plt.plot(RK[:,0,ind_req],RK[:,1,ind_req],label='RK 4')
+plt.plot(HNN_sto[0,:,ind_req],HNN_sto[1,:,ind_req], label='Hamil. NNs')
+plt.xlabel('x-coord')
+plt.ylabel('y-coord')
+plt.legend()
 
-# plt.plot(data.get("coords")[:,0],data.get("coords")[:,1], label='RK4')
-# plt.plot(hnn_ivp.y[0,:],hnn_ivp.y[1,:], label='Hamil. NNs')
-
-###### PLOT ######
-# fig = plt.figure(figsize=(11.3, 3.2), facecolor='white', dpi=DPI)
-
-# # plot physical system
-# fig.add_subplot(1, 4, 1, frameon=True)
-# plt.xticks([]) ;  plt.yticks([])
-# schema = mpimg.imread(EXPERIMENT_DIR + '/pendulum.png')
-# plt.imshow(schema)
-# plt.title("Pendulum system", pad=10)
-
-# # plot dynamics
-# fig.add_subplot(1, 4, 2, frameon=True)
-# x, y, dx, dy, t = get_trajectory(t_span=[0,28], radius=2.1, noise_std=0.01, y0=y0)
-# N = len(x)
-# point_colors = [(i/N, 0, 1-i/N) for i in range(N)]
-# plt.scatter(x,y, s=14, label='data', c=point_colors)
-
-# plt.quiver(field['x'][:,0], field['x'][:,1], field['dx'][:,0], field['dx'][:,1],
-#         cmap='gray_r', scale=ARROW_SCALE, width=ARROW_WIDTH, color=(.2,.2,.2))
-# plt.xlabel("$q$", fontsize=14)
-# plt.ylabel("$p$", rotation=0, fontsize=14)
-# plt.title("Data", pad=10)
-
-# # plot baseline
-# fig.add_subplot(1, 4, 4, frameon=True)
-# plt.quiver(field['x'][:,0], field['x'][:,1], base_field[:,0], base_field[:,1],
-#         cmap='gray_r', scale=ARROW_SCALE, width=ARROW_WIDTH, color=(.5,.5,.5))
-
-# for i, l in enumerate(np.split(base_ivp['y'].T, LINE_SEGMENTS)):
-#     color = (float(i)/LINE_SEGMENTS, 0, 1-float(i)/LINE_SEGMENTS)
-#     plt.plot(l[:,0],l[:,1],color=color, linewidth=LINE_WIDTH)
-
-# plt.xlabel("$q$", fontsize=14)
-# plt.ylabel("$p$", rotation=0, fontsize=14)
-# plt.title("Baseline NN", pad=10)
-
-# # plot HNN
-# fig.add_subplot(1, 4, 4, frameon=True)
-# plt.quiver(field['x'][:,0], field['x'][:,1], hnn_field[:,0], hnn_field[:,1],
-#         cmap='gray_r', scale=ARROW_SCALE, width=ARROW_WIDTH, color=(.5,.5,.5))
-
-# for i, l in enumerate(np.split(hnn_ivp['y'].T, LINE_SEGMENTS)):
-#     color = (float(i)/LINE_SEGMENTS, 0, 1-float(i)/LINE_SEGMENTS)
-#     plt.plot(l[:,0],l[:,1],color=color, linewidth=LINE_WIDTH)
-
-# plt.xlabel("$q$", fontsize=14)
-# plt.ylabel("$p$", rotation=0, fontsize=14)
-# plt.title("Hamiltonian NN", pad=10)
-
-# plt.tight_layout() ; plt.show()
-# fig.savefig('{}/pend{}.{}'.format(args.fig_dir, RK4, FORMAT))
+ecdf1 = ECDF(x_req[:,1])
+ecdf2 = ECDF(rk_req[:,1])
+plt.plot(ecdf1.x,ecdf1.y)
+plt.plot(ecdf2.x,ecdf2.y)
