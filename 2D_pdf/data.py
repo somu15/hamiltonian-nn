@@ -10,7 +10,7 @@ from scipy.stats import uniform
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
 
-Nsamps = 10
+Nsamps = 2
 # lhd0 = lhs(2, samples=Nsamps+1, criterion='centermaximin')
 # lhd = uniform(loc=0,scale=25).ppf(lhd0)
 # lhd = np.zeros((Nsamps+1,2))
