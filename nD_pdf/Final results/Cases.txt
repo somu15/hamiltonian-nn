@@ -1,0 +1,49 @@
+## Actual sampling ##
+5 time length and 50 steps per length
+.tar contains the trained neural network
+.spydata contains the HNN results and the reference results using exact HMC sampling. 4 chains with 1000 samples each and 200 samples considered as burn-in (unless otherwise noted below).
+
+## 3D Rosenbrock (Outdated) ##
+
+Rosen_3D_1: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 10 time length, 20 steps per length
+
+Rosen_3D_2: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 120 time length, 20 steps per length
+Rosen_3D_3: 100 Neurons, 5e-4 learning rate, 25000 steps, 40 training samples, 60 time length, 20 steps per length
+*** Rosen_3D_4: 100 Neurons, 5e-4 learning rate, 25000 steps, 60 training samples, 40 time length, 20 steps per length
+Rosen_3D_5: 100 Neurons, 5e-4 learning rate, 25000 steps, 80 training samples, 30 time length, 20 steps per length
+
+Rosen_3D_6: 100 Neurons, 5e-4 learning rate, 25000 steps, 10 training samples, 120 time length, 20 steps per length
+Rosen_3D_7: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 60 time length, 20 steps per length
+*** Rosen_3D_8: 100 Neurons, 5e-4 learning rate, 25000 steps, 30 training samples, 40 time length, 20 steps per length
+Rosen_3D_9: 100 Neurons, 5e-4 learning rate, 25000 steps, 40 training samples, 30 time length, 20 steps per length
+
+Rosen_3D_10: 100 Neurons, 5e-4 learning rate, 25000 steps, 5 training samples, 120 time length, 20 steps per length
+Rosen_3D_11: 100 Neurons, 5e-4 learning rate, 25000 steps, 10 training samples, 60 time length, 20 steps per length
+*** Rosen_3D_12: 100 Neurons, 5e-4 learning rate, 25000 steps, 15 training samples, 40 time length, 20 steps per length
+Rosen_3D_13: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 30 time length, 20 steps per length
+
+Rosen_3D_14: 25 Neurons, 5e-4 learning rate, 25000 steps, 40 training samples, 30 time length, 20 steps per length
+Rosen_3D_15: 500 Neurons, 5e-4 learning rate, 25000 steps, 40 training samples, 30 time length, 20 steps per length
+
+
+## 3D Rosenbrock (new with NUTS) ##
+(epsilon = 0.1 with 5000 samples of which 1000 are burn-in)
+
+Rosen_3D_1_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 10 time length, 20 steps per length
+
+Rosen_3D_2_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 30 time length, 20 steps per length
+Rosen_3D_3_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 30 training samples, 20 time length, 20 steps per length
+Rosen_3D_4_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 60 training samples, 10 time length, 20 steps per length
+
+Rosen_3D_5_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 10 training samples, 30 time length, 20 steps per length
+Rosen_3D_6_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 15 training samples, 20 time length, 20 steps per length
+Rosen_3D_7_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 30 training samples, 10 time length, 20 steps per length
+
+Rosen_3D_8_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 5 training samples, 30 time length, 20 steps per length
+Rosen_3D_9_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 8 training samples, 20 time length, 20 steps per length
+Rosen_3D_10_NUTS: 100 Neurons, 5e-4 learning rate, 25000 steps, 15 training samples, 10 time length, 20 steps per length
+
+## 1D Gaussian Mixture ##
+1D_Gauss_Mix_demo_035: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 20 time length, 20 steps per length
+
+## 2D Gaussian Four Mixtures ##
