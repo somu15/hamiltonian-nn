@@ -55,7 +55,7 @@ def get_args():
          'hidden_dim': 500,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
-         'total_steps': 25000,
+         'total_steps': 100000,
          'field_type': 'solenoidal',
          'print_every': 200,       
          'name': 'ndpdf',
@@ -260,14 +260,29 @@ def hamil(coords):
     # H = term1 + term2
     
     # ******** 100D Gaussian by Radford Neal #********
+    # dic1 = np.split(coords,args.input_dim)
+    # var1 = np.arange(0.01,1.01,0.01)
+    # term1 = 0.0
+    # for ii in np.arange(0,int(args.input_dim/2),1):
+    #     term1 = term1 + dic1[ii]**2/(2*var1[ii]**2)
+    # term2 = 0.0
+    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+    #     term2 = term2 + dic1[ii]**2/2
+    # H = term1 + term2
+    
+    #******** 100D Allen-Cahn #********
     dic1 = np.split(coords,args.input_dim)
-    var1 = np.arange(0.01,1.01,0.01)
     term1 = 0.0
-    for ii in np.arange(0,int(args.input_dim/2),1):
-        term1 = term1 + dic1[ii]**2/(2*var1[ii]**2)
+    h = 1/(args.input_dim/2)
+    for ii in np.arange(0,int(args.input_dim/2)-1,1):
+        tmp1 = (1-dic1[ii+1]**2)**2
+        tmp2 =  (1-dic1[ii]**2)**2
+        term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
+        # tmp1 = dic1[ii+1] + dic1[ii]
+        # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
     term2 = 0.0
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        term2 = term2 + dic1[ii]**2/2
+        term2 = term2 + 1*dic1[ii]**2/2
     H = term1 + term2
 
     #******** nD Even Rosenbrock #********
@@ -416,7 +431,7 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 5000
+M = 10000
 Madapt = 0 # 500
 theta0 = np.zeros(D) # np.random.normal(0, 1, D)
 delta = 0.2
@@ -522,7 +537,7 @@ for m in np.arange(1, M + Madapt, 1):
 # samples = samples[Madapt:, :]
     # lnprob = lnprob[Madapt:]
 
-burn = 1000
+burn = 500
 
 ess_hnn = np.zeros((chains,int(args.input_dim/2)))
 for ss in np.arange(0,chains,1):
@@ -576,44 +591,44 @@ scatter_matrix(df1, alpha = 0.2, figsize = (6, 6), diagonal = 'kde')
 
 
 
-mean = np.zeros(2)
-cov = np.asarray([[1, 1.98],
-                  [1.98, 4]])
+# mean = np.zeros(2)
+# cov = np.asarray([[1, 1.98],
+#                   [1.98, 4]])
 
-# print('Running HMC with dual averaging and trajectory length %0.2f...' % delta)
-# samples, epsilon = nuts6(M, Madapt, theta0, delta)
-# print('Done. Final epsilon = %f.' % epsilon)
-# print('(M+Madapt) / Functions called: %f' % ((M+Madapt)/float(c.c)))
+# # print('Running HMC with dual averaging and trajectory length %0.2f...' % delta)
+# # samples, epsilon = nuts6(M, Madapt, theta0, delta)
+# # print('Done. Final epsilon = %f.' % epsilon)
+# # print('(M+Madapt) / Functions called: %f' % ((M+Madapt)/float(c.c)))
 
-# samples = samples[1::10, :]
-# print('Percentiles')
-# print (np.percentile(samples, [16, 50, 84], axis=0))
-# print('Mean')
-# print (np.mean(samples, axis=0))
-# print('Stddev')
-# print (np.std(samples, axis=0))
+# # samples = samples[1::10, :]
+# # print('Percentiles')
+# # print (np.percentile(samples, [16, 50, 84], axis=0))
+# # print('Mean')
+# # print (np.mean(samples, axis=0))
+# # print('Stddev')
+# # print (np.std(samples, axis=0))
 
-# try:
-#     import matplotlib.pyplot as plt
-# except ImportError:
-#     import pylab as plt
-temp = np.random.multivariate_normal(mean, cov, size=10000)
-# plt.subplot(1,3,1)
-plt.plot(temp[:, 0], temp[:, 1], '.')
-plt.plot(samples[1000:10000, 0], samples[1000:10000, 1], 'r+')
+# # try:
+# #     import matplotlib.pyplot as plt
+# # except ImportError:
+# #     import pylab as plt
+# temp = np.random.multivariate_normal(mean, cov, size=10000)
+# # plt.subplot(1,3,1)
+# plt.plot(temp[:, 0], temp[:, 1], '.')
+# plt.plot(samples[1000:10000, 0], samples[1000:10000, 1], 'r+')
 
-plt.subplot(1,3,2)
-plt.hist(samples[:,0], bins=50)
-plt.xlabel("x-samples")
+# plt.subplot(1,3,2)
+# plt.hist(samples[:,0], bins=50)
+# plt.xlabel("x-samples")
 
-plt.subplot(1,3,3)
-plt.hist(samples[:,1], bins=50)
-plt.xlabel("y-samples")
-plt.show()
+# plt.subplot(1,3,3)
+# plt.hist(samples[:,1], bins=50)
+# plt.xlabel("y-samples")
+# plt.show()
 
-ess_nuts = np.zeros((1,2))
-nuts_tf = tf.convert_to_tensor(samples[0:1000,:])
-ess_nuts[0,:] = np.array(tfp.mcmc.effective_sample_size(nuts_tf))
+# ess_nuts = np.zeros((1,2))
+# nuts_tf = tf.convert_to_tensor(samples[0:1000,:])
+# ess_nuts[0,:] = np.array(tfp.mcmc.effective_sample_size(nuts_tf))
 
 # if __name__ == "__main__":
 #     test_nuts6()

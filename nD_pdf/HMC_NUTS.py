@@ -51,7 +51,7 @@ RK4 = ''
 
 
 def get_args():
-    return {'input_dim': 6,
+    return {'input_dim': 10,
          'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
@@ -204,11 +204,26 @@ def hamil(coords):
     # term2 = 1*dic1[3]**2/2+1*dic1[4]**2/2+1*dic1[5]**2/2
     # H = term1 + term2
 
-    #******** nD Rosenbrock #********
+    # #******** nD Rosenbrock #********
+    # dic1 = np.split(coords,args.input_dim)
+    # term1 = 0.0
+    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
+    #     term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
+    # term2 = 0.0
+    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
+    
+    #******** 100D Allen-Cahn #********
     dic1 = np.split(coords,args.input_dim)
     term1 = 0.0
+    h = 1/(args.input_dim/2)
     for ii in np.arange(0,int(args.input_dim/2)-1,1):
-        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
+        tmp1 = (1-dic1[ii+1]**2)**2
+        tmp2 =  (1-dic1[ii]**2)**2
+        term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
+        # tmp1 = dic1[ii+1] + dic1[ii]
+        # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
     term2 = 0.0
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
         term2 = term2 + 1*dic1[ii]**2/2
@@ -357,7 +372,7 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 5000
+M = 100000
 Madapt = 0 # 500
 theta0 = np.random.normal(0, 1, D)
 delta = 0.2
@@ -375,7 +390,7 @@ for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
 # epsilon = find_reasonable_epsilon(y0)
 
 # Parameters to the dual averaging algorithm.
-epsilon = 0.1 # 0.1
+epsilon = 0.005 # 0.1
 gamma = 0.05
 t0 = 10
 kappa = 0.75
