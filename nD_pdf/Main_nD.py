@@ -44,7 +44,7 @@ RK4 = ''
 
 
 def get_args():
-    return {'input_dim': 6,
+    return {'input_dim': 2,
          'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
@@ -90,7 +90,7 @@ def get_model(args, baseline):
 
     model_name = 'baseline' if baseline else 'hnn'
     # path = "{}/ndpdf{}-{}.tar".format(args.save_dir, RK4, model_name) # 
-    path = "ndpdf-hnn.tar" # .format(args.save_dir, RK4, model_name) # 
+    path = "1D_Gauss_Mix_demo_035.tar" # .format(args.save_dir, RK4, model_name) # 
     model.load_state_dict(torch.load(path))
     return model
 
@@ -221,14 +221,14 @@ def hamil(coords):
     # H = term1 + term2
 
     #******** nD Rosenbrock #********
-    dic1 = np.split(coords,args.input_dim)
-    term1 = 0.0
-    for ii in np.arange(0,int(args.input_dim/2)-1,1):
-        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
-    term2 = 0.0
-    for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        term2 = term2 + 1*dic1[ii]**2/2
-    H = term1 + term2
+    # dic1 = np.split(coords,args.input_dim)
+    # term1 = 0.0
+    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
+    #     term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
+    # term2 = 0.0
+    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
 
     #******** nD Even Rosenbrock #********
     # dic1 = np.split(coords,args.input_dim)
@@ -244,12 +244,12 @@ def hamil(coords):
     # H = term1 + term2
     
     #******** 1D Gaussian Mixture #********
-    # q, p = np.split(coords,2)
-    # mu1 = 1.0
-    # mu2 = -1.0
-    # sigma = 0.35
-    # term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
-    # H = term1 + p**2/2 # Normal PDF
+    q, p = np.split(coords,2)
+    mu1 = 1.0
+    mu2 = -1.0
+    sigma = 0.35
+    term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
+    H = term1 + p**2/2 # Normal PDF
     
     #******** 2D Gaussian Four Mixtures #********
     # q1, q2, p1, p2 = np.split(coords,4)
@@ -310,7 +310,7 @@ chains = 1
 y0 = np.zeros(args.input_dim)
 N = 10
 L = 5
-steps = L*50 # 
+steps = L*20 # 
 t_span = [0,L]
 kwargs = {'t_eval': np.linspace(t_span[0], t_span[1], steps), 'rtol': 1e-10}
 burn = 1000
@@ -329,7 +329,7 @@ burn = 1000
 
 hnn_fin = np.zeros((chains,N,int(args.input_dim/2)))
 hnn_accept = np.zeros((chains,N))
-
+# mome = np.array([-3,-2.5,-2,-1.5,-1,-0.5,0.75,1.75,2.25,2.75,2.75])
 for ss in np.arange(0,chains,1):
     x_req = np.zeros((N,int(args.input_dim/2)))
     x_req[0,:] = y0[0:int(args.input_dim/2)]
@@ -339,7 +339,7 @@ for ss in np.arange(0,chains,1):
     for ii in np.arange(0,int(args.input_dim/2),1):
         y0[ii] = 0.0
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        y0[ii] = norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #  
+        y0[ii] = -3.0 # norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #   
     HNN_sto = np.zeros((args.input_dim,steps,N))
     for ii in np.arange(0,N,1):
         # L = random.randint(3,6)
@@ -373,6 +373,8 @@ for ss in np.arange(0,chains,1):
             #     y0[jj] = norm(loc=0,scale=1).rvs()
             # else:
             #     y0[jj] = norm(loc=0,scale=(2.718281828459045**(y0[0] / 2))**(-1)).rvs()
+        # y0[0:int(args.input_dim/2)] = 0.0
+        # y0[int(args.input_dim/2):int(args.input_dim)] = mome[ii+1]
         print("Sample: "+str(ii)+" Chain: "+str(ss))
     hnn_accept[ss,:] = accept
     hnn_fin[ss,:,:] = x_req
@@ -456,16 +458,16 @@ hmc_accept = np.zeros((chains,N))
 for ss in np.arange(0,chains,1):
     rk_req = np.zeros((N,int(args.input_dim/2)))
     rk_accept = np.zeros(N)
-    RK = np.zeros((steps+1,int(args.input_dim),N))
+    RK = np.zeros((args.input_dim,steps,N))
     for ii in np.arange(0,int(args.input_dim/2),1):
-        y0[ii] = -1.0 # 0.01
+        y0[ii] = 0.0 # 0.01
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
         y0[ii] = 3.0 # -0.87658921 # norm(loc=0,scale=1).rvs()
     for ii in np.arange(0,N,1):#
         # y0 = HNN_sto[:,0,ii]
         # y0 = hnn_fin[ss,ii,:].reshape(int(args.input_dim/2))
         data = leapfrog ( dynamics_fn, t_span, y0, steps, int(args.input_dim)) # get_dataset(y0=y0, samples=1, test_split=1.0)
-        # RK[:,:,ii] = data.get("coords")[:,0:int(args.input_dim)]
+        RK[:,:,ii] = data[:,0:100]
         yhamil1 = np.zeros(args.input_dim)
         for jj in np.arange(0,args.input_dim,1):
             yhamil1[jj] = data[jj,steps-1] # data.get("coords")[steps-1,jj]
@@ -481,12 +483,14 @@ for ss in np.arange(0,chains,1):
         for jj in np.arange(int(args.input_dim/2),args.input_dim,1):
             y0[jj] = norm(loc=0,scale=1).rvs()
         print("Sample: "+str(ii)+" Chain: "+str(ss))
+        # y0[0:int(args.input_dim/2)] = 0.0
+        # y0[int(args.input_dim/2):int(args.input_dim)] = mome[ii+1]
     hmc_accept[ss,:] = rk_accept
     hmc_fin[ss,:,:] = rk_req
 
 ess_hmc = np.zeros((chains,int(args.input_dim/2)))
 for ss in np.arange(0,chains,1):
-    hmc_tf = tf.convert_to_tensor(hmc_fin[ss,500:3000,:])
+    hmc_tf = tf.convert_to_tensor(hmc_fin[ss,burn:N,:])
     ess_hmc[ss,:] = np.array(tfp.mcmc.effective_sample_size(hmc_tf)) # , filter_beyond_positive_pairs=True
 
 hmc_tf = tf.convert_to_tensor(hmc_fin[:,500:3000,:])
@@ -554,11 +558,12 @@ idx = 250
 # plt.ylabel('X4')
 # plt.legend(frameon=False)
 
-H_HNN = np.zeros(steps)
-H_HMC = np.zeros(steps)
-for ii in range(0,steps):
-    H_HNN[ii] = hamil(HNN_sto[:,ii,0]) # func1(HNN_sto[:,ii,idx]) # 
-    H_HMC[ii] = hamil(data[:,ii]) # func1(RK[ii,:,idx]) # 
+H_HNN = np.zeros((10,steps))
+H_HMC = np.zeros((10,steps))
+for jj in np.arange(0,10,1):
+    for ii in range(0,steps):
+        H_HNN[jj,ii] = hamil(HNN_sto[:,ii,jj]) # func1(HNN_sto[:,ii,idx]) # 
+        H_HMC[jj,ii] = hamil(RK[:,ii,jj]) 
     
 plt.plot(H_HNN)
 plt.plot(H_HMC)
@@ -566,6 +571,11 @@ plt.ylim([2,6])
 
 plt.plot(kwargs['t_eval'],data[0:int(args.input_dim/2),0:250].reshape(250),kwargs['t_eval'],HNN_sto[0,:,0])
 
+for ii in np.arange(0,10,1):
+    # plt.plot(HNN_sto[0,:,ii],HNN_sto[1,:,ii])
+    # plt.plot(H_HNN[ii,:])
+    # plt.plot(RK[0,:,ii],RK[1,:,ii])
+    plt.plot(H_HMC[ii,:])
 
 for ii in np.arange(0,20,1):
     # fig = plt.figure(figsize=(6, 6))

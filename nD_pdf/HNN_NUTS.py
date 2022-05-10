@@ -9,26 +9,26 @@ Created on Wed Mar 16 22:22:02 2022
 # import numpy as np
 from numpy import log, exp, sqrt
 import torch, time, sys
-import autograd
+# import autograd
 import autograd.numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+# import matplotlib.image as mpimg
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
 from statsmodels.distributions.empirical_distribution import ECDF
 import tensorflow as tf
 import tensorflow_probability as tfp
-import csv
-import arviz as az
+# import csv
+# import arviz as az
 
 EXPERIMENT_DIR = './nD_pdf'
 sys.path.append(EXPERIMENT_DIR)
 
-import random
-from data import get_dataset, get_field, get_trajectory, dynamics_fn, hamiltonian_fn
+# import random
+# from data import get_dataset, get_field, get_trajectory, dynamics_fn, hamiltonian_fn
 from nn_models import MLP
 from hnn import HNN
-from utils import L2_loss
+# from utils import L2_loss
 from scipy.stats import norm
 from scipy.stats import uniform
 import pandas as pd
@@ -51,8 +51,8 @@ RK4 = ''
 
 
 def get_args():
-    return {'input_dim': 200,
-         'hidden_dim': 500,
+    return {'input_dim': 6,
+         'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
          'total_steps': 100000,
@@ -79,7 +79,7 @@ def get_model(args, baseline):
 
     model_name = 'baseline' if baseline else 'hnn'
     # path = "{}/ndpdf{}-{}.tar".format(args.save_dir, RK4, model_name) #
-    path = "ndpdf-hnn.tar" # .format(args.save_dir, RK4, model_name) #
+    path = "ndpdf-hnn.tar" # .format(args.save_dir, RK4, model_name) # ndpdf-hnn
     model.load_state_dict(torch.load(path))
     return model
 
@@ -250,14 +250,14 @@ def hamil(coords):
     # H = term1 + term2
 
     #******** nD Rosenbrock #********
-    # dic1 = np.split(coords,args.input_dim)
-    # term1 = 0.0
-    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
-    #     term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
-    # term2 = 0.0
-    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-    #     term2 = term2 + 1*dic1[ii]**2/2
-    # H = term1 + term2
+    dic1 = np.split(coords,args.input_dim)
+    term1 = 0.0
+    for ii in np.arange(0,int(args.input_dim/2)-1,1):
+        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
+    term2 = 0.0
+    for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+        term2 = term2 + 1*dic1[ii]**2/2
+    H = term1 + term2
     
     # ******** 100D Gaussian by Radford Neal #********
     # dic1 = np.split(coords,args.input_dim)
@@ -271,19 +271,19 @@ def hamil(coords):
     # H = term1 + term2
     
     #******** 100D Allen-Cahn #********
-    dic1 = np.split(coords,args.input_dim)
-    term1 = 0.0
-    h = 1/(args.input_dim/2)
-    for ii in np.arange(0,int(args.input_dim/2)-1,1):
-        tmp1 = (1-dic1[ii+1]**2)**2
-        tmp2 =  (1-dic1[ii]**2)**2
-        term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
-        # tmp1 = dic1[ii+1] + dic1[ii]
-        # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
-    term2 = 0.0
-    for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        term2 = term2 + 1*dic1[ii]**2/2
-    H = term1 + term2
+    # dic1 = np.split(coords,args.input_dim)
+    # term1 = 0.0
+    # h = 1/(args.input_dim/2)
+    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
+    #     tmp1 = (1-dic1[ii+1]**2)**2
+    #     tmp2 =  (1-dic1[ii]**2)**2
+    #     term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
+    #     # tmp1 = dic1[ii+1] + dic1[ii]
+    #     # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
+    # term2 = 0.0
+    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
 
     #******** nD Even Rosenbrock #********
     # dic1 = np.split(coords,args.input_dim)
@@ -431,9 +431,9 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 10000
+M = 25000
 Madapt = 0 # 500
-theta0 = np.zeros(D) # np.random.normal(0, 1, D)
+theta0 = np.ones(D) # np.random.normal(0, 1, D)
 delta = 0.2
 D = len(theta0)
 samples = np.empty((M + Madapt, D), dtype=float)
@@ -449,7 +449,7 @@ for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
 # epsilon = find_reasonable_epsilon(y0)
 
 # Parameters to the dual averaging algorithm.
-epsilon = 0.005 # 0.05
+epsilon = 0.025 # 0.005
 gamma = 0.05
 t0 = 10
 kappa = 0.75
@@ -462,8 +462,9 @@ Hbar = 0
 
 
 HNN_accept = np.ones(M)
+traj_len = np.zeros(M)
 
-for m in np.arange(1, M + Madapt, 1):
+for m in np.arange(0, M + Madapt, 1):
     print(m)
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
         y0[ii] = norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #
@@ -528,8 +529,10 @@ for m in np.arange(1, M + Madapt, 1):
     #     epsilonbar = exp((1. - eta) * log(epsilonbar) + eta * log(epsilon))
     # else:
     #     epsilon = epsilonbar
-    alpha =  np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
-    if alpha > uniform().rvs():
+    traj_len[m] = j
+    alpha1 =  np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
+    # alpha1 = alpha / float(nalpha)
+    if alpha1 > uniform().rvs():
         y0[0:int(args.input_dim/2)] = samples[m, :]
     else:
         samples[m, :] = samples[m-1, :]
@@ -537,7 +540,7 @@ for m in np.arange(1, M + Madapt, 1):
 # samples = samples[Madapt:, :]
     # lnprob = lnprob[Madapt:]
 
-burn = 500
+burn = 5000
 
 ess_hnn = np.zeros((chains,int(args.input_dim/2)))
 for ss in np.arange(0,chains,1):
@@ -549,9 +552,25 @@ plt.plot(samples[burn:M, 1], samples[burn:M, 2], 'b+')
 # plt.xticks(np.array([]))
 # plt.yticks(np.array([]))
 
-fig = plt.figure()
+fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(projection='3d')
-ax.scatter(samples[burn:M,0],samples[burn:M,1],samples[burn:M,2])
+ax.scatter(samples[burn:M,0],samples[burn:M,1],samples[burn:M,2],s=2)
+# ax.scatter(samples_ref[burn:M,0],samples_ref[burn:M,1],samples_ref[burn:M,2],s=2)
+
+plt.hist(samples[burn:M,2],bins=50,density=True)
+plt.hist(samples_ref[burn:M,2],bins=50,density=True)
+
+fig = plt.figure(figsize=(5, 5))
+ax = fig.add_subplot()
+e_hnn1 = ECDF(samples[burn:M,2])
+# e_hnn3 = ECDF(samples3[burn:M,2])
+# e_hnn4 = ECDF(samples4[burn:M,2])
+e_hmc = ECDF(samples_ref[burn:M,2])
+plt.plot(e_hnn1.x,e_hnn1.y,label='L 100',linestyle='--',linewidth=1.8)
+# plt.plot(e_hnn3.x,e_hnn3.y,label='L 250',linestyle='-.',linewidth=1.8)
+# plt.plot(e_hnn4.x,e_hnn4.y,label='L 400',linestyle=':',linewidth=1.8)
+plt.plot(e_hmc.x,e_hmc.y,label='Reference',linewidth=3)
+plt.legend()
 
 df1 = pd.DataFrame(samples[burn:M,10:20], columns = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10']) # 
 scatter_matrix(df1, alpha = 0.2, figsize = (6, 6), diagonal = 'kde')
@@ -633,4 +652,15 @@ scatter_matrix(df1, alpha = 0.2, figsize = (6, 6), diagonal = 'kde')
 # if __name__ == "__main__":
 #     test_nuts6()
 
+fig = plt.figure(figsize=(5, 5))
+ax = fig.add_subplot()
+plt.hist(samples[0:17300,50],bins=50,density=True)
+ax.set_ylabel('Probability')
+ax.set_xlabel('u_50')
+ax.set_ylim([0,0.5])
 
+fig = plt.figure(figsize=(5, 5))
+ax = fig.add_subplot()
+plt.plot(samples[1:21,:].T)
+ax.set_ylabel('u value')
+ax.set_xlabel('index')

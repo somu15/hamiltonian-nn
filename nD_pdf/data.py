@@ -14,8 +14,8 @@ from Test_Data import func1
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
 
-input_dim1 = 100
-Nsamps = 150
+input_dim1 = 3
+Nsamps = 40
 lhd0 = lhs(1, samples=Nsamps+1, criterion='centermaximin').reshape(Nsamps+1)
 lhd = np.zeros((Nsamps+1,input_dim1))
 lhd[:,0] = uniform(loc=-3,scale=6).rvs(Nsamps+1)
@@ -147,19 +147,19 @@ def hamiltonian_fn(coords):
     # H = term1 + term2
 
     #******** 100D Allen-Cahn #********
-    dic1 = np.split(coords,2*input_dim1)
-    term1 = 0.0
-    h = 1/(input_dim1)
-    for ii in np.arange(0,input_dim1-1,1):
-        tmp1 = (1-dic1[ii+1]**2)**2
-        tmp2 =  (1-dic1[ii]**2)**2
-        term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
-        # tmp1 = dic1[ii+1] + dic1[ii]
-        # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
-    term2 = 0.0
-    for ii in np.arange(input_dim1,2*input_dim1,1):
-        term2 = term2 + 1*dic1[ii]**2/2
-    H = term1 + term2
+    # dic1 = np.split(coords,2*input_dim1)
+    # term1 = 0.0
+    # h = 1/(input_dim1)
+    # for ii in np.arange(0,input_dim1-1,1):
+    #     tmp1 = (1-dic1[ii+1]**2)**2
+    #     tmp2 =  (1-dic1[ii]**2)**2
+    #     term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
+    #     # tmp1 = dic1[ii+1] + dic1[ii]
+    #     # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
+    # term2 = 0.0
+    # for ii in np.arange(input_dim1,2*input_dim1,1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
 
     #
     # ******** 2D Funnel #********
@@ -209,14 +209,14 @@ def hamiltonian_fn(coords):
     # H = term1 + term2
     #
     # ******** nD Rosenbrock #********
-    # dic1 = np.split(coords,2*input_dim1)
-    # term1 = 0.0
-    # for ii in np.arange(0,input_dim1-1,1):
-    #     term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
-    # term2 = 0.0
-    # for ii in np.arange(input_dim1,2*input_dim1,1):
-    #     term2 = term2 + 1*dic1[ii]**2/2
-    # H = term1 + term2
+    dic1 = np.split(coords,2*input_dim1)
+    term1 = 0.0
+    for ii in np.arange(0,input_dim1-1,1):
+        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
+    term2 = 0.0
+    for ii in np.arange(input_dim1,2*input_dim1,1):
+        term2 = term2 + 1*dic1[ii]**2/2
+    H = term1 + term2
 
     #
     # ******** nD Even Rosenbrock #********
@@ -311,7 +311,8 @@ def leapfrog ( dydt, tspan, y0, n, dim ):
   return y #t,
 
 def dynamics_fn(t, coords):
-    dcoords = autograd.grad(hamiltonian_fn)(coords) #     func1
+    # print("Here")
+    dcoords = autograd.grad(hamiltonian_fn)(coords) #       func1
     dic1 = np.split(dcoords,2*input_dim1)
     S = np.concatenate([dic1[input_dim1]])
     for ii in np.arange(input_dim1+1,2*input_dim1,1):
@@ -320,7 +321,7 @@ def dynamics_fn(t, coords):
         S = np.concatenate([S, -dic1[ii]])
     return S
 
-def get_trajectory(t_span=[0,100], timescale=20, radius=None, y0=None, noise_std=0.01, **kwargs): # 30 20
+def get_trajectory(t_span=[0,250], timescale=40, radius=None, y0=None, noise_std=0.01, **kwargs): # 30 20
     t_eval = np.linspace(t_span[0], t_span[1], int(timescale*(t_span[1]-t_span[0])))
 
     if y0 is None:

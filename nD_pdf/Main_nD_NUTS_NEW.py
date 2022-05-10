@@ -46,7 +46,7 @@ RK4 = ''
 
 
 def get_args():
-    return {'input_dim': 4,
+    return {'input_dim': 2,
          'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
@@ -74,7 +74,7 @@ def get_model(args, baseline):
 
     model_name = 'baseline' if baseline else 'hnn'
     # path = "{}/ndpdf{}-{}.tar".format(args.save_dir, RK4, model_name) # 
-    path = "ndpdf-hnn.tar" # .format(args.save_dir, RK4, model_name) # 
+    path = "1D_Gauss_Mix_demo_035.tar" # .format(args.save_dir, RK4, model_name) # 
     model.load_state_dict(torch.load(path))
     return model
 
@@ -207,12 +207,12 @@ def hamil(coords):
     # H = term1 + term2
     
     #******** 1D Gaussian Mixture #********
-    # q, p = np.split(coords,2)
-    # mu1 = 1.0
-    # mu2 = -1.0
-    # sigma = 0.35
-    # term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
-    # H = term1 + p**2/2 # Normal PDF
+    q, p = np.split(coords,2)
+    mu1 = 1.0
+    mu2 = -1.0
+    sigma = 0.35
+    term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
+    H = term1 + p**2/2 # Normal PDF
     
     #******** 2D Gaussian Four Mixtures #********
     # q1, q2, p1, p2 = np.split(coords,4)
@@ -244,18 +244,18 @@ def hamil(coords):
     # H = term1 + term2
     
     #******** 2D Highly Correlated Gaussian #********
-    q1, q2, p1, p2 = np.split(coords,4)
-    sigma_inv = np.array([[50.25125628,-24.87437186],[-24.87437186,12.56281407]])
-    term1 = 0.
+    # q1, q2, p1, p2 = np.split(coords,4)
+    # sigma_inv = np.array([[50.25125628,-24.87437186],[-24.87437186,12.56281407]])
+    # term1 = 0.
 
-    mu = np.array([0.,0.])
-    y = np.array([q1-mu[0],q2-mu[1]])
-    tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
-    term1 = term1 + np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    # mu = np.array([0.,0.])
+    # y = np.array([q1-mu[0],q2-mu[1]])
+    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    # term1 = term1 + np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
 
-    term1 = -np.log(term1)
-    term2 = p1**2/2+p2**2/2
-    H = term1 + term2
+    # term1 = -np.log(term1)
+    # term2 = p1**2/2+p2**2/2
+    # H = term1 + term2
 
     return H
 

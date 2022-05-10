@@ -16,15 +16,15 @@ from utils import L2_loss, rk4, integrate_model # LH_loss,
 
 def get_args():
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('--input_dim', default=200, type=int, help='dimensionality of input tensor')
-    parser.add_argument('--hidden_dim', default=1000, type=int, help='hidden dimension of mlp') # 100
+    parser.add_argument('--input_dim', default=6, type=int, help='dimensionality of input tensor')
+    parser.add_argument('--hidden_dim', default=100, type=int, help='hidden dimension of mlp') # 100
     # parser.add_argument('--t_span', default=4, type=int, help='t_span')
     # parser.add_argument('--timescale', default=400, type=int, help='timescale')
     parser.add_argument('--learn_rate', default=5e-4, type=float, help='learning rate') #
-    parser.add_argument('--batch_size', default=200, type=int, help='batch_size') # 2000
+    parser.add_argument('--batch_size', default=1000, type=int, help='batch_size') # 2000
     parser.add_argument('--input_noise', default=0.0, type=int, help='std of noise added to inputs')
     parser.add_argument('--nonlinearity', default='sine', type=str, help='neural net nonlinearity') # relu tanh
-    parser.add_argument('--total_steps', default=25000, type=int, help='number of gradient steps') # 25000
+    parser.add_argument('--total_steps', default=100000, type=int, help='number of gradient steps') # 25000
     parser.add_argument('--print_every', default=200, type=int, help='number of gradient steps between prints')
     parser.add_argument('--name', default='ndpdf', type=str, help='only one option right now')
     parser.add_argument('--baseline', dest='baseline', action='store_true', help='run baseline or experiment?')

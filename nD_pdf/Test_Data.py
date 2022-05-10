@@ -9,17 +9,17 @@ import csv
 import autograd.numpy as np
 import autograd
 import matplotlib.pyplot as plt
-input_dim1 = 100
+input_dim1 = 3
 
 def func1(coords):
     # print(coords)
     #******** 1D Gaussian Mixture #********
-    # q, p = np.split(coords,2)
-    # mu1 = 1.0
-    # mu2 = -1.0
-    # sigma = 0.35
-    # term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
-    # H = term1 + p**2/2 # Normal PDF
+    q, p = np.split(coords,2)
+    mu1 = 1.0
+    mu2 = -1.0
+    sigma = 0.35
+    term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
+    H = term1 + p**2/2 # Normal PDF
 
     # #******** 2D Gaussian Four Mixtures #********
     # q1, q2, p1, p2 = np.split(coords,4)
@@ -96,15 +96,15 @@ def func1(coords):
     # H = term1 + term2
 
     # ********* nD Heirarchical (https://crackedbassoon.com/writing/funneling) *********
-    dic1 = np.split(coords,2*input_dim1)
-    term1 = dic1[0]**2/2
-    term1 = term1 - np.log(2 / (np.pi * (1 + np.exp(dic1[1])**2)))
-    for ii in np.arange(2,input_dim1,1):
-        term1 = term1 + (dic1[ii] - dic1[0])**2 / (2 * np.exp(dic1[1])**2)
-    term2 = 0.0
-    for ii in np.arange(input_dim1,2*input_dim1,1):
-        term2 = term2 + dic1[ii]**2/2 # term2 + (dic1[ii]**2 * (2.718281828459045**(dic1[0] / 2))**2)/2
-    H = term1 + term2
+    # dic1 = np.split(coords,2*input_dim1)
+    # term1 = dic1[0]**2/2
+    # term1 = term1 - np.log(2 / (np.pi * (1 + np.exp(dic1[1])**2)))
+    # for ii in np.arange(2,input_dim1,1):
+    #     term1 = term1 + (dic1[ii] - dic1[0])**2 / (2 * np.exp(dic1[1])**2)
+    # term2 = 0.0
+    # for ii in np.arange(input_dim1,2*input_dim1,1):
+    #     term2 = term2 + dic1[ii]**2/2 # term2 + (dic1[ii]**2 * (2.718281828459045**(dic1[0] / 2))**2)/2
+    # H = term1 + term2
 
     return H
 

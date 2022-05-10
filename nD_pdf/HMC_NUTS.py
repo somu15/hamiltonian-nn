@@ -48,10 +48,8 @@ RK4 = ''
 
 ## Ref: 50; 2 and 200
 
-
-
 def get_args():
-    return {'input_dim': 10,
+    return {'input_dim': 6,
          'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
@@ -205,29 +203,29 @@ def hamil(coords):
     # H = term1 + term2
 
     # #******** nD Rosenbrock #********
-    # dic1 = np.split(coords,args.input_dim)
-    # term1 = 0.0
-    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
-    #     term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
-    # term2 = 0.0
-    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-    #     term2 = term2 + 1*dic1[ii]**2/2
-    # H = term1 + term2
-    
-    #******** 100D Allen-Cahn #********
     dic1 = np.split(coords,args.input_dim)
     term1 = 0.0
-    h = 1/(args.input_dim/2)
     for ii in np.arange(0,int(args.input_dim/2)-1,1):
-        tmp1 = (1-dic1[ii+1]**2)**2
-        tmp2 =  (1-dic1[ii]**2)**2
-        term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
-        # tmp1 = dic1[ii+1] + dic1[ii]
-        # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
+        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
     term2 = 0.0
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
         term2 = term2 + 1*dic1[ii]**2/2
     H = term1 + term2
+    
+    #******** 100D Allen-Cahn #********
+    # dic1 = np.split(coords,args.input_dim)
+    # term1 = 0.0
+    # h = 1/(args.input_dim/2)
+    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
+    #     tmp1 = (1-dic1[ii+1]**2)**2
+    #     tmp2 =  (1-dic1[ii]**2)**2
+    #     term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
+    #     # tmp1 = dic1[ii+1] + dic1[ii]
+    #     # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
+    # term2 = 0.0
+    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
 
     #******** nD Even Rosenbrock #********
     # dic1 = np.split(coords,args.input_dim)
@@ -372,9 +370,9 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 100000
+M = 25000
 Madapt = 0 # 500
-theta0 = np.random.normal(0, 1, D)
+theta0 = np.zeros(D) # np.random.normal(0, 1, D)
 delta = 0.2
 D = len(theta0)
 samples = np.empty((M + Madapt, D), dtype=float)
@@ -390,7 +388,7 @@ for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
 # epsilon = find_reasonable_epsilon(y0)
 
 # Parameters to the dual averaging algorithm.
-epsilon = 0.005 # 0.1
+epsilon = 0.025 # 0.05
 gamma = 0.05
 t0 = 10
 kappa = 0.75
@@ -403,6 +401,7 @@ Hbar = 0
 
 
 HNN_accept = np.ones(M)
+traj_len = np.zeros(M)
 
 for m in np.arange(1, M + Madapt, 1):
     print(m)
@@ -456,6 +455,8 @@ for m in np.arange(1, M + Madapt, 1):
         s = sprime and stop_criterion(thetaminus, thetaplus, rminus, rplus)
         # Increment depth.
         j += 1
+        
+    traj_len[m] = j
 
     alpha =  np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
     if alpha > uniform().rvs():
@@ -464,7 +465,7 @@ for m in np.arange(1, M + Madapt, 1):
         samples[m, :] = samples[m-1, :]
         HNN_accept[m] = 0
 
-burn = 1000
+burn = 5000
 
 ess_hnn = np.zeros((chains,int(args.input_dim/2)))
 for ss in np.arange(0,chains,1):
@@ -475,7 +476,7 @@ plt.plot(samples[burn:M, 1], samples[burn:M, 2], 'r+')
 
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
-ax.scatter(samples[:,0],samples[:,1],samples[:,2])
+ax.scatter(samples[burn:M,0],samples[burn:M,1],samples[burn:M,2],s=2)
 
 df1 = pd.DataFrame(samples[burn:M,10:20], columns = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10']) # 
 scatter_matrix(df1, alpha = 0.2, figsize = (6, 6), diagonal = 'kde')
