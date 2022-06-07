@@ -33,6 +33,7 @@ from scipy.stats import norm
 from scipy.stats import uniform
 import pandas as pd
 from pandas.plotting import scatter_matrix
+import csv
 
 # from .helpers import progress_range
 
@@ -48,14 +49,12 @@ RK4 = ''
 
 ## Ref: 50; 2 and 200
 
-
-
 def get_args():
     return {'input_dim': 6,
          'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
-         'total_steps': 100000,
+         'total_steps': 100200,
          'field_type': 'solenoidal',
          'print_every': 200,       
          'name': 'ndpdf',
@@ -140,21 +139,19 @@ hnn_model = get_model(args, baseline=False)
 def hamil(coords):
     
     # ******** 20D German Credit Data #******** (200 Neurons, 100000 stepa)
-    # input_dim1 = 20
-    # file  = '/Users/dhulls/Desktop/German_Credit_20.csv'
-    # data = np.zeros((1000,21))
+    # input_dim1 = 24
+    # file  = '/Users/dhulls/Desktop/German_Credit.csv'
+    # data = np.zeros((1000,input_dim1+1))
     # count = 0
     # with open(file, 'r') as file:
     #     reader = csv.reader(file)
     #     for row in reader:
     #         if count > 0:
-    #             for ii in np.arange(0,21,1):
+    #             for ii in np.arange(0,input_dim1+1,1):
     #                 data[count-1,ii] = float(row[ii])
     #         count = count + 1
-    # # data[:,2] = (data[:,2] - np.mean(data[:,2])) / np.std(data[:,2])
-    # # data[:,5] = (data[:,5] - np.mean(data[:,5])) / np.std(data[:,5])
-    # # data[:,13] = (data[:,13] - np.mean(data[:,13])) / np.std(data[:,13])
-    # for ii in np.arange(1,21,1):
+
+    # for ii in np.arange(0,input_dim1,1):
     #     data[:,ii] = (data[:,ii] - np.mean(data[:,ii])) / np.std(data[:,ii])
 
     # dic1 = np.split(coords,2*input_dim1)
@@ -165,7 +162,7 @@ def hamil(coords):
     # #     f_i = np.log(1+np.exp(np.sum(data[ii,1:21] * np.array(param).reshape(20))*data[ii,0])) + np.sum(np.array(param).reshape(20) * np.array(param).reshape(20))/(2000.0) #
     # #     term1 = term1 + f_i
     # term2 = 0.0
-    # term1 = np.sum(np.log(np.exp(np.sum(data[:,1:21] * np.array(param).reshape(20),axis=1)*data[:,0])+1)+ np.sum(np.array(param).reshape(20) * np.array(param).reshape(20))/(2000.0))
+    # term1 = np.sum(np.log(np.exp(np.sum(data[:,0:24] * np.array(param).reshape(24),axis=1)*data[:,24])+1)+ np.sum(np.array(param).reshape(24) * np.array(param).reshape(24))/(2000.0))
     # for ii in np.arange(input_dim1,2*input_dim1,1):
     #     term2 = term2 + 1*dic1[ii]**2/2
     # H = term1 + term2
@@ -261,7 +258,7 @@ def hamil(coords):
     
     # ******** 100D Gaussian by Radford Neal #********
     # dic1 = np.split(coords,args.input_dim)
-    # var1 = np.arange(0.01,1.01,0.01)
+    # var1 =  np.ones(int(args.input_dim/2)) # np.arange(0.01,1.01,0.01)
     # term1 = 0.0
     # for ii in np.arange(0,int(args.input_dim/2),1):
     #     term1 = term1 + dic1[ii]**2/(2*var1[ii]**2)
@@ -335,7 +332,7 @@ def hamil(coords):
     # term2 = p1**2/2+p2**2/2
     # H = term1 + term2
 
-    #******** 2D Highly Correlated Gaussian #********
+    # ******** 2D Highly Correlated Gaussian #********
     # q1, q2, p1, p2 = np.split(coords,4)
     # sigma_inv = np.array([[50.25125628,-24.87437186],[-24.87437186,12.56281407]])
     # term1 = 0.
@@ -431,7 +428,7 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 25000
+M = 125000
 Madapt = 0 # 500
 theta0 = np.ones(D) # np.random.normal(0, 1, D)
 delta = 0.2
@@ -449,7 +446,7 @@ for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
 # epsilon = find_reasonable_epsilon(y0)
 
 # Parameters to the dual averaging algorithm.
-epsilon = 0.025 # 0.005
+epsilon = 0.025 # 0.005 # 
 gamma = 0.05
 t0 = 10
 kappa = 0.75
@@ -530,7 +527,7 @@ for m in np.arange(0, M + Madapt, 1):
     # else:
     #     epsilon = epsilonbar
     traj_len[m] = j
-    alpha1 =  np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
+    alpha1 = np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
     # alpha1 = alpha / float(nalpha)
     if alpha1 > uniform().rvs():
         y0[0:int(args.input_dim/2)] = samples[m, :]
@@ -548,7 +545,10 @@ for ss in np.arange(0,chains,1):
     ess_hnn[ss,:] = np.array(tfp.mcmc.effective_sample_size(hnn_tf))
 
 fig = plt.figure(figsize=(6, 6))
-plt.plot(samples[burn:M, 1], samples[burn:M, 2], 'b+')
+plt.plot(samples_ref[burn:M, 8], samples_ref[burn:M, 9], 'b+')
+# plt.plot(lhd[:,0],lhd[:,1], 'r+')
+plt.plot(samples[burn:M, 8], samples[burn:M, 9], 'r+')
+plt.ylim([-500,500])
 # plt.xticks(np.array([]))
 # plt.yticks(np.array([]))
 
@@ -560,20 +560,21 @@ ax.scatter(samples[burn:M,0],samples[burn:M,1],samples[burn:M,2],s=2)
 plt.hist(samples[burn:M,2],bins=50,density=True)
 plt.hist(samples_ref[burn:M,2],bins=50,density=True)
 
+ind11 = 0
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot()
-e_hnn1 = ECDF(samples[burn:M,2])
+e_hnn1 = ECDF(samples[burn:M,ind11])
 # e_hnn3 = ECDF(samples3[burn:M,2])
 # e_hnn4 = ECDF(samples4[burn:M,2])
-e_hmc = ECDF(samples_ref[burn:M,2])
+e_hmc = ECDF(samples_ref[burn:M,ind11])
 plt.plot(e_hnn1.x,e_hnn1.y,label='L 100',linestyle='--',linewidth=1.8)
 # plt.plot(e_hnn3.x,e_hnn3.y,label='L 250',linestyle='-.',linewidth=1.8)
 # plt.plot(e_hnn4.x,e_hnn4.y,label='L 400',linestyle=':',linewidth=1.8)
-plt.plot(e_hmc.x,e_hmc.y,label='Reference',linewidth=3)
+plt.plot(e_hmc.x,e_hmc.y,label='Reference',linewidth=1.8)
 plt.legend()
 
-df1 = pd.DataFrame(samples[burn:M,10:20], columns = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10']) # 
-scatter_matrix(df1, alpha = 0.2, figsize = (6, 6), diagonal = 'kde')
+df1 = pd.DataFrame(samples[burn:M,0:12], columns = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12']) # 
+scatter_matrix(df1, alpha = 0.2, figsize = (8, 8), diagonal = 'kde')
 # plt.savefig('/Users/dhulls/Desktop/Logistic_2.pdf', format='pdf', bbox_inches = "tight")
 
 # fig = plt.figure(figsize=(6, 6))
@@ -644,6 +645,8 @@ scatter_matrix(df1, alpha = 0.2, figsize = (6, 6), diagonal = 'kde')
 # plt.hist(samples[:,1], bins=50)
 # plt.xlabel("y-samples")
 # plt.show()
+
+
 
 # ess_nuts = np.zeros((1,2))
 # nuts_tf = tf.convert_to_tensor(samples[0:1000,:])

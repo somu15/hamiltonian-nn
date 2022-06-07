@@ -4,30 +4,86 @@
 .spydata contains the HNN results and the reference results using exact HMC sampling. 4 chains with 1000 samples each and 200 samples considered as burn-in (unless otherwise noted below).
 
 ## 3D Rosenbrock (new with NUTS) ##
-(epsilon = 0.1 with 5000 samples of which 1000 are burn-in)
+(epsilon = 0.025 with 25000 samples of which 5000 are burn-in)
 
 Rosen_3D_1: 100 Neurons, 5e-4 learning rate, 100000 steps, 20 training samples, 100 time length, 40 steps per length, 1000 training batch size
-# Rosen_3D_2: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 50 time length, 40 steps per length
-
 Rosen_3D_3: 100 Neurons, 5e-4 learning rate, 100000 steps, 20 training samples, 150 time length, 40 steps per length, 1000 training batch size
 Rosen_3D_4: 100 Neurons, 5e-4 learning rate, 100000 steps, 20 training samples, 250 time length, 40 steps per length, 1000 training batch size
-Rosen_3D_5: 100 Neurons, 5e-4 learning rate, 100000 steps, 20 training samples, 400 time length, 40 steps per length, 1000 training batch size
-
 Rosen_3D_6: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
+Rosen_3D_7: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 150 time length, 40 steps per length, 1000 training batch size
+Rosen_3D_8: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 100 time length, 40 steps per length, 1000 training batch size
+Rosen_3D_HMC_mac: NUTS with traditional HMC
 
 ## 100D Allen-Cahn ##
-100D_AllenCahn_NEW: 500 Neurons, 5e-4 learning rate, 10000 (150000) steps, 100 training samples, 100 time length, 40 steps per length, 200 batch_size
+100D_AllenCahn: 500 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 batch_size
 
 ## 1D Gaussian Mixture ##
 1D_Gauss_Mix_demo_035: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 20 time length, 20 steps per length
 
 ## 2D Gaussian Four Mixtures ##
+2D_Four_Gaussian: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
 
+## 2D Neal's Funnel ##
+# 2D_Neals_Funnel: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 150 time length, 40 steps per length, 1000 training batch size
+2D_Neals_Funnel1: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
+2D_Neals_Funnel2: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size, manual selection of data
+lhd = np.zeros((Nsamps+1,input_dim1))
+lhd[0,:] = np.array([-4.81365419e+00, -2.97798186e-02])
+lhd[1,:] = np.array([-5.62375103e+00,  5.59615650e-02])
+lhd[2,:] = np.array([-3.13534412e+00, -7.82559226e-03])
+lhd[3,:] = np.array([-4.10408610e+00, -1.75231961e-01])
+lhd[4,:] = np.array([-3.48652441e+00,  2.08413696e-02])
+lhd[5,:] = np.array([-1.89749715, -0.17589146])
+lhd[6,:] = np.array([-0.99256864, -0.00727149])
+lhd[7,:] = np.array([-2.9187646 ,  0.05156044])
+lhd[8,:] = np.array([-0.30902009, -0.14061672])
+lhd[9,:] = np.array([-0.74445954,  1.93901093])
+lhd[10,:] = np.array([-2.94024525, -0.13851359])
+lhd[11,:] = np.array([-2.89546373,  0.19974407])
+lhd[12,:] = np.array([-0.46497868,  0.10666009])
+lhd[13,:] = np.array([-0.3279123 , -0.60457858])
+lhd[14,:] = np.array([-1.48711408, -0.22847326])
+lhd[15,:] = np.array([ 2.66950842, -1.87534805])
+lhd[16,:] = np.array([ 3.88019759,  3.28248355])
+lhd[17,:] = np.array([ 2.53041437,  5.54543447])
+lhd[18,:] = np.array([ 4.05471661, -8.08981748])
+lhd[19,:] = np.array([ 3.4939906 , -0.402581  ])
+lhd[20,:] = np.array([ 4.63787144, 11.9996081 ])
+lhd[21,:] = np.array([ 4.52431852, 11.81929023])
+lhd[22,:] = np.array([ 3.15674207,  1.03361234])
+lhd[24,:] = np.array([ 4.79236031, 15.95186538])
+lhd[25,:] = np.array([  6.73753264, -37.0528468 ])
+lhd[26,:] = np.array([  5.81396227, -12.01195105])
+lhd[27,:] = np.array([  6.77140021, -16.44087366])
+lhd[28,:] = np.array([  6.49234703, -33.48267789])
+lhd[29,:] = np.array([  5.37633032,  18.07759346])
+lhd[30,:] = np.array([  5.90846514, -15.15809784])
+lhd[31,:] = np.array([  8.83140151,   0.62088719])
+lhd[32,:] = np.array([  7.30044902,  82.16536546])
+lhd[33,:] = np.array([  6.85262912,  35.97655317])
+lhd[34,:] = np.array([  8.24849661, 137.27889409])
+lhd[23,:] = np.array([ 11.10258934, 505.95724823])
+lhd[35,:] = np.array([ 10.64813531, 233.35850515])
+lhd[36,:] = np.array([ 10.86277996, 346.52612434])
+lhd[37,:] = np.array([  10.17857642, -394.79699817])
+lhd[38,:] = np.array([  10.33035825, -203.99648423])
+lhd[39,:] = np.array([  10.52160846, -312.74337054])
+lhd[40,:] = np.array([ 1.,1.])
 
+## 5D Ill-conditioned Gaussian ##
+5D_Ill_Gaussian: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
 
+## 10D Rosenbrock ##
+10D_Rosenbrock: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
 
+## 24D Logistic regression ##
+24D_Bayesian_Logistic: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
 
+************************************ OUTDATED ************************************
 ## 3D Rosenbrock (Outdated) ##
+
+# Rosen_3D_2: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 50 time length, 40 steps per length
+# Rosen_3D_5: 100 Neurons, 5e-4 learning rate, 100000 steps, 20 training samples, 400 time length, 40 steps per length, 1000 training batch size
 
 Rosen_3D_1: 100 Neurons, 5e-4 learning rate, 25000 steps, 20 training samples, 10 time length, 20 steps per length
 

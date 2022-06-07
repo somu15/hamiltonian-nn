@@ -16,7 +16,7 @@ from utils import L2_loss, rk4, integrate_model # LH_loss,
 
 def get_args():
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('--input_dim', default=6, type=int, help='dimensionality of input tensor')
+    parser.add_argument('--input_dim', default=2, type=int, help='dimensionality of input tensor')
     parser.add_argument('--hidden_dim', default=100, type=int, help='hidden dimension of mlp') # 100
     # parser.add_argument('--t_span', default=4, type=int, help='t_span')
     # parser.add_argument('--timescale', default=400, type=int, help='timescale')

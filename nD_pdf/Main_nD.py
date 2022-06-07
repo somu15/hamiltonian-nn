@@ -63,6 +63,8 @@ class ObjectView(object):
     def __init__(self, d): self.__dict__ = d
 
 args = ObjectView(get_args())
+
+
 # np.random.seed(args.seed)
 # R = 2.5
 # field = get_field(xmin=-R, xmax=R, ymin=-R, ymax=R, gridsize=15)
@@ -308,7 +310,7 @@ def hamil(coords):
 
 chains = 1
 y0 = np.zeros(args.input_dim)
-N = 10
+N = 5000
 L = 5
 steps = L*20 # 
 t_span = [0,L]
@@ -326,7 +328,6 @@ burn = 1000
     # else:
     #     y0[ii] = norm(loc=0,scale=(2.718281828459045**(y0[0] / 2))**(-1)).rvs()
 
-
 hnn_fin = np.zeros((chains,N,int(args.input_dim/2)))
 hnn_accept = np.zeros((chains,N))
 # mome = np.array([-3,-2.5,-2,-1.5,-1,-0.5,0.75,1.75,2.25,2.75,2.75])
@@ -339,7 +340,7 @@ for ss in np.arange(0,chains,1):
     for ii in np.arange(0,int(args.input_dim/2),1):
         y0[ii] = 0.0
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        y0[ii] = -3.0 # norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #   
+        y0[ii] = norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #   
     HNN_sto = np.zeros((args.input_dim,steps,N))
     for ii in np.arange(0,N,1):
         # L = random.randint(3,6)
@@ -462,7 +463,7 @@ for ss in np.arange(0,chains,1):
     for ii in np.arange(0,int(args.input_dim/2),1):
         y0[ii] = 0.0 # 0.01
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        y0[ii] = 3.0 # -0.87658921 # norm(loc=0,scale=1).rvs()
+        y0[ii] = norm(loc=0,scale=1).rvs() # -3.0 # -0.87658921 # 
     for ii in np.arange(0,N,1):#
         # y0 = HNN_sto[:,0,ii]
         # y0 = hnn_fin[ss,ii,:].reshape(int(args.input_dim/2))
@@ -572,10 +573,11 @@ plt.ylim([2,6])
 plt.plot(kwargs['t_eval'],data[0:int(args.input_dim/2),0:250].reshape(250),kwargs['t_eval'],HNN_sto[0,:,0])
 
 for ii in np.arange(0,10,1):
+    plt.plot(np.arange(1,101,1),H_HNN[ii,:],np.arange(1,101,1),H_HMC[ii,:])
     # plt.plot(HNN_sto[0,:,ii],HNN_sto[1,:,ii])
     # plt.plot(H_HNN[ii,:])
     # plt.plot(RK[0,:,ii],RK[1,:,ii])
-    plt.plot(H_HMC[ii,:])
+    # plt.plot(H_HMC[ii,:])
 
 for ii in np.arange(0,20,1):
     # fig = plt.figure(figsize=(6, 6))

@@ -49,11 +49,11 @@ RK4 = ''
 ## Ref: 50; 2 and 200
 
 def get_args():
-    return {'input_dim': 6,
-         'hidden_dim': 100,
+    return {'input_dim': 200,
+         'hidden_dim': 500,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
-         'total_steps': 25000,
+         'total_steps': 100000,
          'field_type': 'solenoidal',
          'print_every': 200,       
          'name': 'ndpdf',
@@ -77,7 +77,7 @@ def get_model(args, baseline):
 
     model_name = 'baseline' if baseline else 'hnn'
     # path = "{}/ndpdf{}-{}.tar".format(args.save_dir, RK4, model_name) #
-    path = "ndpdf-hnn.tar" # .format(args.save_dir, RK4, model_name) #
+    path = "100D_AllenCahn.tar" # .format(args.save_dir, RK4, model_name) # ndpdf-hnn.tar
     model.load_state_dict(torch.load(path))
     return model
 
@@ -109,27 +109,30 @@ def leapfrog ( dydt, tspan, y0, n, dim ):
 def hamil(coords):
     
     # ******** 20D German Credit Data #********
-    # input_dim1 = 20
-    # file  = '/Users/dhulls/Desktop/German_Credit_20.csv'
-    # data = np.zeros((1000,21))
+    # input_dim1 = 24
+    # file  = '/Users/dhulls/Desktop/German_Credit.csv'
+    # data = np.zeros((1000,input_dim1+1))
     # count = 0
     # with open(file, 'r') as file:
     #     reader = csv.reader(file)
     #     for row in reader:
     #         if count > 0:
-    #             for ii in np.arange(0,21,1):
+    #             for ii in np.arange(0,input_dim1+1,1):
     #                 data[count-1,ii] = float(row[ii])
     #         count = count + 1
-    
-    # for ii in np.arange(1,21,1):
+
+    # for ii in np.arange(0,input_dim1,1):
     #     data[:,ii] = (data[:,ii] - np.mean(data[:,ii])) / np.std(data[:,ii])
 
     # dic1 = np.split(coords,2*input_dim1)
     # term1 = 0.0
     # param = dic1[0:input_dim1]
-    
+    # # print(param)
+    # # for ii in np.arange(0,1000,1):
+    # #     f_i = np.log(1+np.exp(np.sum(data[ii,1:21] * np.array(param).reshape(20))*data[ii,0])) + np.sum(np.array(param).reshape(20) * np.array(param).reshape(20))/(2000.0) #
+    # #     term1 = term1 + f_i
     # term2 = 0.0
-    # term1 = np.sum(np.log(np.exp(np.sum(data[:,1:21] * np.array(param).reshape(20),axis=1)*data[:,0])+1)+ np.sum(np.array(param).reshape(20) * np.array(param).reshape(20))/(2000.0))
+    # term1 = np.sum(np.log(np.exp(np.sum(data[:,0:24] * np.array(param).reshape(24),axis=1)*data[:,24])+1)+ np.sum(np.array(param).reshape(24) * np.array(param).reshape(24))/(2000.0))
     # for ii in np.arange(input_dim1,2*input_dim1,1):
     #     term2 = term2 + 1*dic1[ii]**2/2
     # H = term1 + term2
@@ -203,29 +206,29 @@ def hamil(coords):
     # H = term1 + term2
 
     # #******** nD Rosenbrock #********
-    dic1 = np.split(coords,args.input_dim)
-    term1 = 0.0
-    for ii in np.arange(0,int(args.input_dim/2)-1,1):
-        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
-    term2 = 0.0
-    for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        term2 = term2 + 1*dic1[ii]**2/2
-    H = term1 + term2
-    
-    #******** 100D Allen-Cahn #********
     # dic1 = np.split(coords,args.input_dim)
     # term1 = 0.0
-    # h = 1/(args.input_dim/2)
     # for ii in np.arange(0,int(args.input_dim/2)-1,1):
-    #     tmp1 = (1-dic1[ii+1]**2)**2
-    #     tmp2 =  (1-dic1[ii]**2)**2
-    #     term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
-    #     # tmp1 = dic1[ii+1] + dic1[ii]
-    #     # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
+    #     term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
     # term2 = 0.0
     # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
     #     term2 = term2 + 1*dic1[ii]**2/2
     # H = term1 + term2
+    
+    #******** 100D Allen-Cahn #********
+    dic1 = np.split(coords,args.input_dim)
+    term1 = 0.0
+    h = 1/(args.input_dim/2)
+    for ii in np.arange(0,int(args.input_dim/2)-1,1):
+        tmp1 = (1-dic1[ii+1]**2)**2
+        tmp2 =  (1-dic1[ii]**2)**2
+        term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
+        # tmp1 = dic1[ii+1] + dic1[ii]
+        # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
+    term2 = 0.0
+    for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+        term2 = term2 + 1*dic1[ii]**2/2
+    H = term1 + term2
 
     #******** nD Even Rosenbrock #********
     # dic1 = np.split(coords,args.input_dim)
@@ -370,9 +373,9 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 25000
+M = 1
 Madapt = 0 # 500
-theta0 = np.zeros(D) # np.random.normal(0, 1, D)
+theta0 = np.ones(D) # np.random.normal(0, 1, D)
 delta = 0.2
 D = len(theta0)
 samples = np.empty((M + Madapt, D), dtype=float)
@@ -382,7 +385,7 @@ y0 = np.zeros(args.input_dim)
 for ii in np.arange(0,int(args.input_dim/2),1):
     y0[ii] = theta0[ii]
 for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-    y0[ii] = norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #
+    y0[ii] = norm(loc=0,scale=1).rvs() #  theta4[ii-100] #  3.0 # -0.87658921 #
 
 # Choose a reasonable first epsilon by a simple heuristic.
 # epsilon = find_reasonable_epsilon(y0)
@@ -403,12 +406,13 @@ Hbar = 0
 HNN_accept = np.ones(M)
 traj_len = np.zeros(M)
 
-for m in np.arange(1, M + Madapt, 1):
+for m in np.arange(0, M + Madapt, 1):
     print(m)
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
         y0[ii] = norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #
     # Resample momenta.
     # r0 = np.random.normal(0, 1, D)
+    # r_sto = y0[int(args.input_dim/2):int(args.input_dim)]
 
     #joint lnp of theta and momentum r
     joint = hamil(y0) # logp - 0.5 * np.dot(r0, r0.T)
@@ -472,7 +476,7 @@ for ss in np.arange(0,chains,1):
     hnn_tf = tf.convert_to_tensor(samples[burn:M,:])
     ess_hnn[ss,:] = np.array(tfp.mcmc.effective_sample_size(hnn_tf))
     
-plt.plot(samples[burn:M, 1], samples[burn:M, 2], 'r+')
+plt.plot(samples[burn:M, 0], samples[burn:M, 1], 'r+')
 
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')

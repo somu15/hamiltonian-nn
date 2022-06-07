@@ -14,11 +14,54 @@ from Test_Data import func1
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
 
-input_dim1 = 3
+input_dim1 = 1
 Nsamps = 40
-lhd0 = lhs(1, samples=Nsamps+1, criterion='centermaximin').reshape(Nsamps+1)
-lhd = np.zeros((Nsamps+1,input_dim1))
-lhd[:,0] = uniform(loc=-3,scale=6).rvs(Nsamps+1)
+# lhd = np.zeros((Nsamps+1,input_dim1))
+# lhd[0,:] = np.array([-4.81365419e+00, -2.97798186e-02])
+# lhd[1,:] = np.array([-5.62375103e+00,  5.59615650e-02])
+# lhd[2,:] = np.array([-3.13534412e+00, -7.82559226e-03])
+# lhd[3,:] = np.array([-4.10408610e+00, -1.75231961e-01])
+# lhd[4,:] = np.array([-3.48652441e+00,  2.08413696e-02])
+# lhd[5,:] = np.array([-1.89749715, -0.17589146])
+# lhd[6,:] = np.array([-0.99256864, -0.00727149])
+# lhd[7,:] = np.array([-2.9187646 ,  0.05156044])
+# lhd[8,:] = np.array([-0.30902009, -0.14061672])
+# lhd[9,:] = np.array([-0.74445954,  1.93901093])
+# lhd[10,:] = np.array([-2.94024525, -0.13851359])
+# lhd[11,:] = np.array([-2.89546373,  0.19974407])
+# lhd[12,:] = np.array([-0.46497868,  0.10666009])
+# lhd[13,:] = np.array([-0.3279123 , -0.60457858])
+# lhd[14,:] = np.array([-1.48711408, -0.22847326])
+# lhd[15,:] = np.array([ 2.66950842, -1.87534805])
+# lhd[16,:] = np.array([ 3.88019759,  3.28248355])
+# lhd[17,:] = np.array([ 2.53041437,  5.54543447])
+# lhd[18,:] = np.array([ 4.05471661, -8.08981748])
+# lhd[19,:] = np.array([ 3.4939906 , -0.402581  ])
+# lhd[20,:] = np.array([ 4.63787144, 11.9996081 ])
+# lhd[21,:] = np.array([ 4.52431852, 11.81929023])
+# lhd[22,:] = np.array([ 3.15674207,  1.03361234])
+# lhd[24,:] = np.array([ 4.79236031, 15.95186538])
+# lhd[25,:] = np.array([  6.73753264, -37.0528468 ])
+# lhd[26,:] = np.array([  5.81396227, -12.01195105])
+# lhd[27,:] = np.array([  6.77140021, -16.44087366])
+# lhd[28,:] = np.array([  6.49234703, -33.48267789])
+# lhd[29,:] = np.array([  5.37633032,  18.07759346])
+# lhd[30,:] = np.array([  5.90846514, -15.15809784])
+# lhd[31,:] = np.array([  8.83140151,   0.62088719])
+# lhd[32,:] = np.array([  7.30044902,  82.16536546])
+# lhd[33,:] = np.array([  6.85262912,  35.97655317])
+# lhd[34,:] = np.array([  8.24849661, 137.27889409])
+# lhd[23,:] = np.array([ 11.10258934, 505.95724823])
+# lhd[35,:] = np.array([ 10.64813531, 233.35850515])
+# lhd[36,:] = np.array([ 10.86277996, 346.52612434])
+# lhd[37,:] = np.array([  10.17857642, -394.79699817])
+# lhd[38,:] = np.array([  10.33035825, -203.99648423])
+# lhd[39,:] = np.array([  10.52160846, -312.74337054])
+# lhd[40,:] = np.array([ 1.,1.])
+
+# lhd0 = lhs(1, samples=Nsamps+1, criterion='centermaximin').reshape(Nsamps+1)
+# lhd = np.zeros((Nsamps+1,input_dim1))
+# lhd[:,0] = uniform(loc=-3,scale=6).rvs(Nsamps+1)
 # lhd[:,1] = uniform(loc=0,scale=6).rvs(Nsamps+1)
 # lhd[:,2] = uniform(loc=0,scale=60).rvs(Nsamps+1)
 # lhd[:,0] = norm().ppf(lhd0)
@@ -52,12 +95,12 @@ lhd[:,0] = uniform(loc=-3,scale=6).rvs(Nsamps+1)
 def hamiltonian_fn(coords):
 
     #******** 1D Gaussian Mixture #********
-    # q, p = np.split(coords,2)
-    # mu1 = 1.0
-    # mu2 = -1.0
-    # sigma = 0.35
-    # term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
-    # H = term1 + p**2/2 # Normal PDF
+    q, p = np.split(coords,2)
+    mu1 = 1.0
+    mu2 = -1.0
+    sigma = 0.35
+    term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
+    H = term1 + p**2/2 # Normal PDF
 
     # #******** 2D Gaussian Four Mixtures #********
     # q1, q2, p1, p2 = np.split(coords,4)
@@ -137,7 +180,7 @@ def hamiltonian_fn(coords):
 
     # ******** 100D Gaussian by Radford Neal #********
     # dic1 = np.split(coords,2*input_dim1)
-    # var1 = np.arange(0.01,1.01,0.01)
+    # var1 =  np.ones(input_dim1) # np.arange(0.01,1.01,0.01)
     # term1 = 0.0
     # for ii in np.arange(0,input_dim1,1):
     #     term1 = term1 + dic1[ii]**2/(2*var1[ii]**2)
@@ -209,14 +252,14 @@ def hamiltonian_fn(coords):
     # H = term1 + term2
     #
     # ******** nD Rosenbrock #********
-    dic1 = np.split(coords,2*input_dim1)
-    term1 = 0.0
-    for ii in np.arange(0,input_dim1-1,1):
-        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
-    term2 = 0.0
-    for ii in np.arange(input_dim1,2*input_dim1,1):
-        term2 = term2 + 1*dic1[ii]**2/2
-    H = term1 + term2
+    # dic1 = np.split(coords,2*input_dim1)
+    # term1 = 0.0
+    # for ii in np.arange(0,input_dim1-1,1):
+    #     term1 = term1 + (100.0 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
+    # term2 = 0.0
+    # for ii in np.arange(input_dim1,2*input_dim1,1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
 
     #
     # ******** nD Even Rosenbrock #********
@@ -312,7 +355,7 @@ def leapfrog ( dydt, tspan, y0, n, dim ):
 
 def dynamics_fn(t, coords):
     # print("Here")
-    dcoords = autograd.grad(hamiltonian_fn)(coords) #       func1
+    dcoords = autograd.grad(func1)(coords) # hamiltonian_fn
     dic1 = np.split(dcoords,2*input_dim1)
     S = np.concatenate([dic1[input_dim1]])
     for ii in np.arange(input_dim1+1,2*input_dim1,1):
@@ -358,9 +401,9 @@ def get_dataset(seed=0, samples=Nsamps, test_split=1.0, **kwargs):
     # y_init = np.array([-0.73442741,  0.87541503, -0.91145534,  2.23884429, -0.94334989, -0.43981041, -1.32755931, -1.07763671, -0.76373273, -0.04889701, -0.85163158, -1.53461637, -0.05483824, -1.02400955,  0.20548304, -1.16507185, -1.10568765, -0.66630082, -1.32053015, -0.86211622,  1.13940068, -1.23482582,  0.40234164, -0.68481009, -0.87079715, -0.57884966, -0.31155253,  0.05616534, -1.16514984,  0.90082649, 0.46566244, -1.53624369,  1.48825219,  1.89588918,  1.17877957, -0.17992484, 1.07075262,  1.05445173, -0.40317695,  1.22244507])
     y_init = np.zeros(2*input_dim1)
     for ii in np.arange(0,input_dim1,1):
-        y_init[ii] = 1.0 # norm(loc=0,scale=1).rvs() #  lhd[count1,ii] # uniform(loc=-2,scale=4).rvs() # 1.0
+        y_init[ii] = 0.0 # lhd[count1,ii] # 1.0 # norm(loc=0,scale=1).rvs() #  lhd[count1,ii] # uniform(loc=-2,scale=4).rvs()
     for ii in np.arange(input_dim1,2*input_dim1,1):
-        y_init[ii] = norm(loc=0,scale=1).rvs()
+        y_init[ii] = norm(loc=0,scale=1).rvs() # lhd_p[count1,ii] #
         # if ii == input_dim1:
         #     y_init[ii] = norm(loc=0,scale=1).rvs()
         # else:
@@ -375,9 +418,9 @@ def get_dataset(seed=0, samples=Nsamps, test_split=1.0, **kwargs):
         y_init = np.zeros(2*input_dim1)
         count1 = count1 + 1
         for ii in np.arange(0,input_dim1,1):
-            y_init[ii] = dic1[ii].T[len(dic1[ii].T)-1] #  lhd[count1,ii] #  uniform(loc=-2,scale=4).rvs() #
+            y_init[ii] = dic1[ii].T[len(dic1[ii].T)-1] #  lhd[count1,ii] #  uniform(loc=-2,scale=4).rvs() # lhd[count1,ii] #
         for ii in np.arange(input_dim1,2*input_dim1,1):
-            y_init[ii] = norm(loc=0,scale=1).rvs()
+            y_init[ii] = norm(loc=0,scale=1).rvs() # lhd_p[count1,ii] #
             # if ii == input_dim1:
             #     y_init[ii] = norm(loc=0,scale=1).rvs()
             # else:

@@ -9,7 +9,7 @@ import csv
 import autograd.numpy as np
 import autograd
 import matplotlib.pyplot as plt
-input_dim1 = 3
+input_dim1 = 24
 
 def func1(coords):
     # print(coords)
@@ -64,22 +64,20 @@ def func1(coords):
     # term2 = p1**2/2+p2**2/2
     # H = term1 + term2
 
-    # ******** 20D German Credit Data #********
-    # input_dim1 = 20
-    # file  = '/Users/dhulls/Desktop/German_Credit_20.csv'
-    # data = np.zeros((1000,21))
+    # ******** 24D German Credit Data #********
+    # input_dim1 = 24
+    # file  = '/Users/dhulls/Desktop/German_Credit.csv'
+    # data = np.zeros((1000,input_dim1+1))
     # count = 0
     # with open(file, 'r') as file:
     #     reader = csv.reader(file)
     #     for row in reader:
     #         if count > 0:
-    #             for ii in np.arange(0,21,1):
+    #             for ii in np.arange(0,input_dim1+1,1):
     #                 data[count-1,ii] = float(row[ii])
     #         count = count + 1
-    # # data[:,2] = (data[:,2] - np.mean(data[:,2])) / np.std(data[:,2])
-    # # data[:,5] = (data[:,5] - np.mean(data[:,5])) / np.std(data[:,5])
-    # # data[:,13] = (data[:,13] - np.mean(data[:,13])) / np.std(data[:,13])
-    # for ii in np.arange(1,21,1):
+    #
+    # for ii in np.arange(0,input_dim1,1):
     #     data[:,ii] = (data[:,ii] - np.mean(data[:,ii])) / np.std(data[:,ii])
     #
     # dic1 = np.split(coords,2*input_dim1)
@@ -90,7 +88,7 @@ def func1(coords):
     # #     f_i = np.log(1+np.exp(np.sum(data[ii,1:21] * np.array(param).reshape(20))*data[ii,0])) + np.sum(np.array(param).reshape(20) * np.array(param).reshape(20))/(2000.0) #
     # #     term1 = term1 + f_i
     # term2 = 0.0
-    # term1 = np.sum(np.log(np.exp(np.sum(data[:,1:21] * np.array(param).reshape(20),axis=1)*data[:,0])+1)+ np.sum(np.array(param).reshape(20) * np.array(param).reshape(20))/(2000.0))
+    # term1 = np.sum(np.log(np.exp(np.sum(data[:,0:24] * np.array(param).reshape(24),axis=1)*data[:,24])+1)+ np.sum(np.array(param).reshape(24) * np.array(param).reshape(24))/(2000.0))
     # for ii in np.arange(input_dim1,2*input_dim1,1):
     #     term2 = term2 + 1*dic1[ii]**2/2
     # H = term1 + term2
