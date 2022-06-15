@@ -9,7 +9,7 @@ import csv
 import autograd.numpy as np
 import autograd
 import matplotlib.pyplot as plt
-input_dim1 = 24
+input_dim1 = 2
 
 def func1(coords):
     # print(coords)

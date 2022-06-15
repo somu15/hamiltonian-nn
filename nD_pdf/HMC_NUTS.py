@@ -49,8 +49,8 @@ RK4 = ''
 ## Ref: 50; 2 and 200
 
 def get_args():
-    return {'input_dim': 200,
-         'hidden_dim': 500,
+    return {'input_dim': 6,
+         'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
          'total_steps': 100000,
@@ -77,7 +77,7 @@ def get_model(args, baseline):
 
     model_name = 'baseline' if baseline else 'hnn'
     # path = "{}/ndpdf{}-{}.tar".format(args.save_dir, RK4, model_name) #
-    path = "100D_AllenCahn.tar" # .format(args.save_dir, RK4, model_name) # ndpdf-hnn.tar
+    path = "ndpdf-hnn.tar" # .format(args.save_dir, RK4, model_name) # ndpdf-hnn.tar
     model.load_state_dict(torch.load(path))
     return model
 
@@ -136,6 +136,17 @@ def hamil(coords):
     # for ii in np.arange(input_dim1,2*input_dim1,1):
     #     term2 = term2 + 1*dic1[ii]**2/2
     # H = term1 + term2
+    
+    #******** nD standard Gaussian #********
+    dic1 = np.split(coords,args.input_dim)
+    var1 = np.ones(int(args.input_dim/2))
+    term1 = dic1[0]**2/(2*var1[0])
+    for ii in np.arange(1,int(args.input_dim/2),1):
+        term1 = term1 + dic1[ii]**2/(2*var1[ii])
+    term2 = dic1[int(args.input_dim/2)]**2/2
+    for ii in np.arange(int(args.input_dim/2)+1,int(args.input_dim),1):
+        term2 = term2 + dic1[ii]**2/2
+    H = term1 + term2
 
     #******** 5D Gaussian #********
     # dic1 = np.split(coords,args.input_dim)
@@ -216,19 +227,19 @@ def hamil(coords):
     # H = term1 + term2
     
     #******** 100D Allen-Cahn #********
-    dic1 = np.split(coords,args.input_dim)
-    term1 = 0.0
-    h = 1/(args.input_dim/2)
-    for ii in np.arange(0,int(args.input_dim/2)-1,1):
-        tmp1 = (1-dic1[ii+1]**2)**2
-        tmp2 =  (1-dic1[ii]**2)**2
-        term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
-        # tmp1 = dic1[ii+1] + dic1[ii]
-        # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
-    term2 = 0.0
-    for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        term2 = term2 + 1*dic1[ii]**2/2
-    H = term1 + term2
+    # dic1 = np.split(coords,args.input_dim)
+    # term1 = 0.0
+    # h = 1/(args.input_dim/2)
+    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
+    #     tmp1 = (1-dic1[ii+1]**2)**2
+    #     tmp2 =  (1-dic1[ii]**2)**2
+    #     term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (tmp1 + tmp2)
+    #     # tmp1 = dic1[ii+1] + dic1[ii]
+    #     # term1 = term1 + 1/(2*h) * (dic1[ii+1] - dic1[ii])**2 + h/2 * (1 - tmp1**2)**2
+    # term2 = 0.0
+    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
 
     #******** nD Even Rosenbrock #********
     # dic1 = np.split(coords,args.input_dim)
@@ -373,7 +384,7 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 1
+M = 25000 # 125000
 Madapt = 0 # 500
 theta0 = np.ones(D) # np.random.normal(0, 1, D)
 delta = 0.2
@@ -391,7 +402,7 @@ for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
 # epsilon = find_reasonable_epsilon(y0)
 
 # Parameters to the dual averaging algorithm.
-epsilon = 0.025 # 0.05
+epsilon = 0.01 # 0.025
 gamma = 0.05
 t0 = 10
 kappa = 0.75
@@ -405,6 +416,7 @@ Hbar = 0
 
 HNN_accept = np.ones(M)
 traj_len = np.zeros(M)
+H_store = np.zeros(M)
 
 for m in np.arange(0, M + Madapt, 1):
     print(m)
@@ -461,13 +473,16 @@ for m in np.arange(0, M + Madapt, 1):
         j += 1
         
     traj_len[m] = j
+    
 
-    alpha =  np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
-    if alpha > uniform().rvs():
+    alpha1 = alpha/nalpha # alpha/(2**j-2**(j-1)) # np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
+    if alpha1 > uniform().rvs():
         y0[0:int(args.input_dim/2)] = samples[m, :]
+        H_store[m] = hamil(np.concatenate((samples[m, :], r_sto), axis=0))
     else:
         samples[m, :] = samples[m-1, :]
         HNN_accept[m] = 0
+        H_store[m] = joint
 
 burn = 5000
 
@@ -488,3 +503,33 @@ scatter_matrix(df1, alpha = 0.2, figsize = (6, 6), diagonal = 'kde')
 
 plt.plot(samples[:, 0], samples[:, 1], 'r+')
 plt.ylim([-40,40])
+
+h_tmp = np.zeros(3000)
+for ii in np.arange(0,3000,1):
+    h_tmp[ii] = hamil(np.concatenate((samples[618,:], norm(loc=0,scale=1).rvs(2)), axis=0)) # 2345 1050
+
+# tmp = np.ediff1d(H_store[0:3000])
+
+# e_s = ECDF(np.ediff1d(h_tmp))
+# e_t = ECDF(H_store[0:3000]-np.mean(H_store[0:3000]))
+# plt.plot(e_s.x,e_s.y,label='Sample',linestyle='--',linewidth=1.8)
+# plt.plot(e_t.x,e_t.y,label='Total',linewidth=1.8)
+
+# BFMI = np.ones(M)
+# for ii in np.arange(100,len(BFMI),1):
+#     H1 = H_store[ii-100:ii]
+#     t1 = np.ediff1d(H1)
+#     t2 = H1 - np.mean(H1) # H_store-np.mean(H_store) # 
+#     BFMI[ii] = np.sum(t1**2)/np.sum(t2**2)
+
+# sc = plt.scatter(samples[0:M,0], samples[0:M,1], s=10, c=BFMI, cmap='gray')
+# plt.colorbar(sc)
+# plt.show()
+
+plt.hist(np.log(H_store[0:3000])-np.mean(np.log(H_store[0:3000])),bins=50)
+plt.hist(np.log(h_tmp)-np.mean(np.log(h_tmp)),bins=50)
+
+e_s = ECDF(np.log(h_tmp)-np.mean(np.log(h_tmp)))
+e_t = ECDF(np.log(H_store[0:3000])-np.mean(np.log(H_store[0:3000])))
+plt.plot(e_s.x,e_s.y,label='Sample',linestyle='--',linewidth=1.8)
+plt.plot(e_t.x,e_t.y,label='Total',linewidth=1.8)

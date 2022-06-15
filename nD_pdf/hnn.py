@@ -7,7 +7,7 @@ import numpy as np
 from nn_models import MLP
 from utils import rk4
 
-input_dim1 = 1
+input_dim1 = 2
 
 class HNN(torch.nn.Module):
     '''Learn arbitrary vector fields that are sums of conservative and solenoidal fields'''

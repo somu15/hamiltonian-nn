@@ -14,7 +14,7 @@ from Test_Data import func1
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
 
-input_dim1 = 1
+input_dim1 = 3
 Nsamps = 40
 # lhd = np.zeros((Nsamps+1,input_dim1))
 # lhd[0,:] = np.array([-4.81365419e+00, -2.97798186e-02])
@@ -95,12 +95,12 @@ Nsamps = 40
 def hamiltonian_fn(coords):
 
     #******** 1D Gaussian Mixture #********
-    q, p = np.split(coords,2)
-    mu1 = 1.0
-    mu2 = -1.0
-    sigma = 0.35
-    term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
-    H = term1 + p**2/2 # Normal PDF
+    # q, p = np.split(coords,2)
+    # mu1 = 1.0
+    # mu2 = -1.0
+    # sigma = 0.35
+    # term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
+    # H = term1 + p**2/2 # Normal PDF
 
     # #******** 2D Gaussian Four Mixtures #********
     # q1, q2, p1, p2 = np.split(coords,4)
@@ -216,14 +216,14 @@ def hamiltonian_fn(coords):
     # H = term1 + term2
     #
     # ******** nD Funnel #********
-    # dic1 = np.split(coords,2*input_dim1)
-    # term1 = dic1[0]**2/(2*3**2)
-    # for ii in np.arange(1,input_dim1,1):
-    #     term1 = term1 + dic1[ii]**2/(2 * (2.718281828459045**(dic1[0] / 2))**2)
-    # term2 = 0.0
-    # for ii in np.arange(input_dim1,2*input_dim1,1):
-    #     term2 = term2 + dic1[ii]**2/2 # term2 + (dic1[ii]**2 * (2.718281828459045**(dic1[0] / 2))**2)/2
-    # H = term1 + term2
+    dic1 = np.split(coords,2*input_dim1)
+    term1 = dic1[0]**2/(2*3**2)
+    for ii in np.arange(1,input_dim1,1):
+        term1 = term1 + dic1[ii]**2/(2 * (2.718281828459045**(dic1[0] / 2))**2)
+    term2 = 0.0
+    for ii in np.arange(input_dim1,2*input_dim1,1):
+        term2 = term2 + dic1[ii]**2/2 # term2 + (dic1[ii]**2 * (2.718281828459045**(dic1[0] / 2))**2)/2
+    H = term1 + term2
 
     # ********* nD Heirarchical (https://crackedbassoon.com/writing/funneling) *********
     # dic1 = np.split(coords,2*input_dim1)
@@ -259,6 +259,17 @@ def hamiltonian_fn(coords):
     # term2 = 0.0
     # for ii in np.arange(input_dim1,2*input_dim1,1):
     #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
+
+    # ******** nD standard Gaussian #********
+    # dic1 = np.split(coords,2*input_dim1)
+    # var1 = np.ones(int(input_dim1))
+    # term1 = dic1[0]**2/(2*var1[0])
+    # for ii in np.arange(1,int(input_dim1),1):
+    #     term1 = term1 + dic1[ii]**2/(2*var1[ii])
+    # term2 = dic1[int(input_dim1)]**2/2
+    # for ii in np.arange(int(input_dim1)+1,int(2*input_dim1),1):
+    #     term2 = term2 + dic1[ii]**2/2
     # H = term1 + term2
 
     #
@@ -355,7 +366,7 @@ def leapfrog ( dydt, tspan, y0, n, dim ):
 
 def dynamics_fn(t, coords):
     # print("Here")
-    dcoords = autograd.grad(func1)(coords) # hamiltonian_fn
+    dcoords = autograd.grad(hamiltonian_fn)(coords) #  func1
     dic1 = np.split(dcoords,2*input_dim1)
     S = np.concatenate([dic1[input_dim1]])
     for ii in np.arange(input_dim1+1,2*input_dim1,1):
@@ -364,7 +375,7 @@ def dynamics_fn(t, coords):
         S = np.concatenate([S, -dic1[ii]])
     return S
 
-def get_trajectory(t_span=[0,250], timescale=40, radius=None, y0=None, noise_std=0.01, **kwargs): # 30 20
+def get_trajectory(t_span=[0,250], timescale=100, radius=None, y0=None, noise_std=0.01, **kwargs): # 30 20
     t_eval = np.linspace(t_span[0], t_span[1], int(timescale*(t_span[1]-t_span[0])))
 
     if y0 is None:
@@ -401,7 +412,7 @@ def get_dataset(seed=0, samples=Nsamps, test_split=1.0, **kwargs):
     # y_init = np.array([-0.73442741,  0.87541503, -0.91145534,  2.23884429, -0.94334989, -0.43981041, -1.32755931, -1.07763671, -0.76373273, -0.04889701, -0.85163158, -1.53461637, -0.05483824, -1.02400955,  0.20548304, -1.16507185, -1.10568765, -0.66630082, -1.32053015, -0.86211622,  1.13940068, -1.23482582,  0.40234164, -0.68481009, -0.87079715, -0.57884966, -0.31155253,  0.05616534, -1.16514984,  0.90082649, 0.46566244, -1.53624369,  1.48825219,  1.89588918,  1.17877957, -0.17992484, 1.07075262,  1.05445173, -0.40317695,  1.22244507])
     y_init = np.zeros(2*input_dim1)
     for ii in np.arange(0,input_dim1,1):
-        y_init[ii] = 0.0 # lhd[count1,ii] # 1.0 # norm(loc=0,scale=1).rvs() #  lhd[count1,ii] # uniform(loc=-2,scale=4).rvs()
+        y_init[ii] = 1.0 # lhd[count1,ii] # 0.0 # norm(loc=0,scale=1).rvs() #  lhd[count1,ii] # uniform(loc=-2,scale=4).rvs()
     for ii in np.arange(input_dim1,2*input_dim1,1):
         y_init[ii] = norm(loc=0,scale=1).rvs() # lhd_p[count1,ii] #
         # if ii == input_dim1:

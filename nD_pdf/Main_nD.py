@@ -310,7 +310,7 @@ def hamil(coords):
 
 chains = 1
 y0 = np.zeros(args.input_dim)
-N = 5000
+N = 1 # 5000
 L = 5
 steps = L*20 # 
 t_span = [0,L]
@@ -340,7 +340,7 @@ for ss in np.arange(0,chains,1):
     for ii in np.arange(0,int(args.input_dim/2),1):
         y0[ii] = 0.0
     for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        y0[ii] = norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #   
+        y0[ii] = -3.0 # norm(loc=0,scale=1).rvs() #  3.0 # -0.87658921 #   
     HNN_sto = np.zeros((args.input_dim,steps,N))
     for ii in np.arange(0,N,1):
         # L = random.randint(3,6)

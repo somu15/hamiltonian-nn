@@ -16,7 +16,7 @@ from utils import L2_loss, rk4, integrate_model # LH_loss,
 
 def get_args():
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('--input_dim', default=2, type=int, help='dimensionality of input tensor')
+    parser.add_argument('--input_dim', default=6, type=int, help='dimensionality of input tensor')
     parser.add_argument('--hidden_dim', default=100, type=int, help='hidden dimension of mlp') # 100
     # parser.add_argument('--t_span', default=4, type=int, help='t_span')
     # parser.add_argument('--timescale', default=400, type=int, help='timescale')
@@ -31,7 +31,7 @@ def get_args():
     parser.add_argument('--use_rk4', dest='use_rk4', action='store_true', help='integrate derivative with RK4')
     parser.add_argument('--verbose', dest='verbose', action='store_true', help='verbose?')
     parser.add_argument('--field_type', default='solenoidal', type=str, help='type of vector field to learn')
-    parser.add_argument('--seed', default=0, type=int, help='random seed')
+    parser.add_argument('--seed', default=0, type=int, help='random seed') # 0 10 101 85
     parser.add_argument('--save_dir', default=THIS_DIR, type=str, help='where to save the trained model')
     parser.set_defaults(feature=True)
     return parser.parse_args()

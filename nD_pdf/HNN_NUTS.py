@@ -33,6 +33,7 @@ from scipy.stats import norm
 from scipy.stats import uniform
 import pandas as pd
 from pandas.plotting import scatter_matrix
+from scipy.stats import multivariate_normal
 import csv
 
 # from .helpers import progress_range
@@ -50,11 +51,11 @@ RK4 = ''
 ## Ref: 50; 2 and 200
 
 def get_args():
-    return {'input_dim': 6,
+    return {'input_dim': 4,
          'hidden_dim': 100,
          'learn_rate': 5e-4,
          'nonlinearity': 'sine',
-         'total_steps': 100200,
+         'total_steps': 100000,
          'field_type': 'solenoidal',
          'print_every': 200,       
          'name': 'ndpdf',
@@ -78,7 +79,7 @@ def get_model(args, baseline):
 
     model_name = 'baseline' if baseline else 'hnn'
     # path = "{}/ndpdf{}-{}.tar".format(args.save_dir, RK4, model_name) #
-    path = "ndpdf-hnn.tar" # .format(args.save_dir, RK4, model_name) # ndpdf-hnn
+    path = "2D_Four_Gaussian.tar" # .format(args.save_dir, RK4, model_name) # ndpdf-hnn
     model.load_state_dict(torch.load(path))
     return model
 
@@ -247,14 +248,14 @@ def hamil(coords):
     # H = term1 + term2
 
     #******** nD Rosenbrock #********
-    dic1 = np.split(coords,args.input_dim)
-    term1 = 0.0
-    for ii in np.arange(0,int(args.input_dim/2)-1,1):
-        term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
-    term2 = 0.0
-    for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
-        term2 = term2 + 1*dic1[ii]**2/2
-    H = term1 + term2
+    # dic1 = np.split(coords,args.input_dim)
+    # term1 = 0.0
+    # for ii in np.arange(0,int(args.input_dim/2)-1,1):
+    #     term1 = term1 + (100 * (dic1[ii+1] - dic1[ii]**2)**2 + (1 - dic1[ii])**2) / 20.0
+    # term2 = 0.0
+    # for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
+    #     term2 = term2 + 1*dic1[ii]**2/2
+    # H = term1 + term2
     
     # ******** 100D Gaussian by Radford Neal #********
     # dic1 = np.split(coords,args.input_dim)
@@ -304,33 +305,33 @@ def hamil(coords):
     # H = term1 + p**2/2 # Normal PDF
 
     #******** 2D Gaussian Four Mixtures #********
-    # q1, q2, p1, p2 = np.split(coords,4)
-    # sigma_inv = np.array([[1.,0.],[0.,1.]])
-    # term1 = 0.
+    q1, q2, p1, p2 = np.split(coords,4)
+    sigma_inv = np.array([[1.,0.],[0.,1.]])
+    term1 = 0.
 
-    # mu = np.array([3.,0.])
-    # y = np.array([q1-mu[0],q2-mu[1]])
-    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
-    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    mu = np.array([3.,0.])
+    y = np.array([q1-mu[0],q2-mu[1]])
+    tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
 
-    # mu = np.array([-3.,0.])
-    # y = np.array([q1-mu[0],q2-mu[1]])
-    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
-    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    mu = np.array([-3.,0.])
+    y = np.array([q1-mu[0],q2-mu[1]])
+    tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
 
-    # mu = np.array([0.,3.])
-    # y = np.array([q1-mu[0],q2-mu[1]])
-    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
-    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    mu = np.array([0.,3.])
+    y = np.array([q1-mu[0],q2-mu[1]])
+    tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
 
-    # mu = np.array([0.,-3.])
-    # y = np.array([q1-mu[0],q2-mu[1]])
-    # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
-    # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
+    mu = np.array([0.,-3.])
+    y = np.array([q1-mu[0],q2-mu[1]])
+    tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
+    term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
 
-    # term1 = -np.log(term1)
-    # term2 = p1**2/2+p2**2/2
-    # H = term1 + term2
+    term1 = -np.log(term1)
+    term2 = p1**2/2+p2**2/2
+    H = term1 + term2
 
     # ******** 2D Highly Correlated Gaussian #********
     # q1, q2, p1, p2 = np.split(coords,4)
@@ -403,6 +404,7 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
         rplus = rprime[:]
         # alphaprime = min(1., np.exp(joint - joint0))
         alphaprime = min(1., np.exp(joint0 - joint))
+        # print(np.exp(joint0 - joint))
         nalphaprime = 1
     else:
         # Recursion: Implicitly build the height j-1 left and right subtrees.
@@ -428,7 +430,7 @@ def build_tree(theta, r, logu, v, j, epsilon, joint0):
     return thetaminus, rminus, thetaplus, rplus, thetaprime, rprime, nprime, sprime, alphaprime, nalphaprime
 
 D = int(args.input_dim/2)
-M = 125000
+M = 250000 # 125000
 Madapt = 0 # 500
 theta0 = np.ones(D) # np.random.normal(0, 1, D)
 delta = 0.2
@@ -446,7 +448,7 @@ for ii in np.arange(int(args.input_dim/2),int(args.input_dim),1):
 # epsilon = find_reasonable_epsilon(y0)
 
 # Parameters to the dual averaging algorithm.
-epsilon = 0.025 # 0.005 # 
+epsilon = 0.025 #  0.025 # 
 gamma = 0.05
 t0 = 10
 kappa = 0.75
@@ -460,6 +462,8 @@ Hbar = 0
 
 HNN_accept = np.ones(M)
 traj_len = np.zeros(M)
+alpha_req = np.zeros(M)
+H_store = np.zeros(M)
 
 for m in np.arange(0, M + Madapt, 1):
     print(m)
@@ -526,19 +530,58 @@ for m in np.arange(0, M + Madapt, 1):
     #     epsilonbar = exp((1. - eta) * log(epsilonbar) + eta * log(epsilon))
     # else:
     #     epsilon = epsilonbar
+    
     traj_len[m] = j
-    alpha1 = np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0))))
+    alpha_req[m] = alpha
+    alpha1 = alpha/nalpha # (2**j-2**(j-1)) # np.minimum(1,np.exp(joint - hamil(np.concatenate((samples[m, :], r_sto), axis=0)))) #  
     # alpha1 = alpha / float(nalpha)
     if alpha1 > uniform().rvs():
         y0[0:int(args.input_dim/2)] = samples[m, :]
+        H_store[m] = hamil(np.concatenate((samples[m, :], r_sto), axis=0))
     else:
         samples[m, :] = samples[m-1, :]
         HNN_accept[m] = 0
+        H_store[m] = joint
 # samples = samples[Madapt:, :]
     # lnprob = lnprob[Madapt:]
 
-burn = 5000
+# ## 1D Gaussian Mixture
 
+# s = 10000
+# ref = np.zeros(s)
+# for ii in np.arange(0,s,1):
+#     if uniform().rvs() > 0.5:
+#         ref[ii] = norm(loc=-1.,scale=0.35).rvs()
+#     else:
+#         ref[ii] = norm(loc=1.,scale=0.35).rvs()
+# e_hnn1 = ECDF(samples[0:10000,0])
+# e_ref = ECDF(ref)
+# plt.plot(e_hnn1.x,e_hnn1.y,label='L 100',linestyle='--',linewidth=1.8)
+# plt.plot(e_ref.x,e_ref.y,label='Reference',linewidth=1.8)
+
+# ## 2D Gaussian Mixture
+
+s = 100000
+ref = np.zeros((s,2))
+for ii in np.arange(0,s,1):
+    tmp = uniform().rvs()
+    if tmp < 0.25:
+        ref[ii,:] = multivariate_normal([-3.0, 0.], [[1.0, 0.0], [0.0, 1.0]]).rvs()
+    elif tmp>=0.25 and tmp<0.5:
+        ref[ii,:] = multivariate_normal([3.0, 0.], [[1.0, 0.0], [0.0, 1.0]]).rvs()
+    elif tmp>=0.5 and tmp<0.75:
+        ref[ii,:] = multivariate_normal([0.0, 3.0], [[1.0, 0.0], [0.0, 1.0]]).rvs()
+    else:
+        ref[ii,:] = multivariate_normal([0.0, -3.0], [[1.0, 0.0], [0.0, 1.0]]).rvs()
+ind1 = 1
+e_hnn1 = ECDF(samples[0:90000,ind1])
+e_ref = ECDF(ref[:,ind1])
+plt.plot(e_hnn1.x,e_hnn1.y,label='L 100',linestyle='--',linewidth=1.8)
+plt.plot(e_ref.x,e_ref.y,label='Reference',linewidth=1.8)
+
+# ### Previous
+
+burn = 0
 ess_hnn = np.zeros((chains,int(args.input_dim/2)))
 for ss in np.arange(0,chains,1):
     hnn_tf = tf.convert_to_tensor(samples[burn:M,:])
@@ -564,13 +607,10 @@ ind11 = 0
 fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot()
 e_hnn1 = ECDF(samples[burn:M,ind11])
-# e_hnn3 = ECDF(samples3[burn:M,2])
-# e_hnn4 = ECDF(samples4[burn:M,2])
-e_hmc = ECDF(samples_ref[burn:M,ind11])
+# e_hmc = ECDF(samples_ref[burn:M,ind11])
 plt.plot(e_hnn1.x,e_hnn1.y,label='L 100',linestyle='--',linewidth=1.8)
-# plt.plot(e_hnn3.x,e_hnn3.y,label='L 250',linestyle='-.',linewidth=1.8)
-# plt.plot(e_hnn4.x,e_hnn4.y,label='L 400',linestyle=':',linewidth=1.8)
 plt.plot(e_hmc.x,e_hmc.y,label='Reference',linewidth=1.8)
+plt.xlim([0,75])
 plt.legend()
 
 df1 = pd.DataFrame(samples[burn:M,0:12], columns = ['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12']) # 
