@@ -7,7 +7,7 @@ import numpy as np
 from nn_models import MLP
 from utils import rk4
 
-input_dim1 = 2
+input_dim1 = 100
 
 class HNN(torch.nn.Module):
     '''Learn arbitrary vector fields that are sums of conservative and solenoidal fields'''
@@ -34,6 +34,27 @@ class HNN(torch.nn.Module):
         dic1 = (y.split(1,1))
         answer1 = torch.cat(dic1[0:input_dim1], 1), torch.cat(dic1[input_dim1:2*input_dim1], 1)
         return answer1
+
+    # '''Learn arbitrary vector fields that are sums of conservative and solenoidal fields'''
+    # def __init__(self, input_dim, differentiable_model, field_type='solenoidal',
+    #                 baseline=False, assume_canonical_coords=True):
+    #     super(HNN, self).__init__()
+    #     self.baseline = baseline
+    #     self.differentiable_model = differentiable_model
+    #     self.assume_canonical_coords = assume_canonical_coords
+    #     self.M = self.permutation_tensor(input_dim) # Levi-Civita permutation tensor
+    #     self.field_type = field_type
+
+    # def forward(self, x):
+    #     # traditional forward pass
+    #     if self.baseline:
+    #         return self.differentiable_model(x)
+
+    #     y = self.differentiable_model(x)
+    #     assert y.dim() == 2 and y.shape[1] == 2, "Output tensor should have shape [batch_size, 2]"
+    #     # print("Here 1")
+    #     # print(x.shape)
+    #     return y.split(1,1)
 
     def rk4_time_derivative(self, x, dt):
         return rk4(fun=self.time_derivative, y0=x, t=0, dt=dt)
@@ -62,6 +83,32 @@ class HNN(torch.nn.Module):
             return [conservative_field, solenoidal_field]
 
         return conservative_field + solenoidal_field
+
+    # def time_derivative(self, x, t=None, separate_fields=False):
+    #     '''NEURAL ODE-STLE VECTOR FIELD'''
+    #     if self.baseline:
+    #         return self.differentiable_model(x)
+
+    #     '''NEURAL HAMILTONIAN-STLE VECTOR FIELD'''
+    #     F1, F2 = self.forward(x) # traditional forward pass
+    #     # print("Here 2")
+    #     # print(F2.shape)
+
+    #     conservative_field = torch.zeros_like(x) # start out with both components set to 0
+    #     solenoidal_field = torch.zeros_like(x)
+
+    #     if self.field_type != 'solenoidal':
+    #         dF1 = torch.autograd.grad(F1.sum(), x, create_graph=True)[0] # gradients for conservative field
+    #         conservative_field = dF1 @ torch.eye(*self.M.shape)
+
+    #     if self.field_type != 'conservative':
+    #         dF2 = torch.autograd.grad(F2.sum(), x, create_graph=True)[0] # gradients for solenoidal field
+    #         solenoidal_field = dF2 @ self.M.t()
+
+    #     if separate_fields:
+    #         return [conservative_field, solenoidal_field]
+
+    #     return conservative_field + solenoidal_field
 
     def permutation_tensor(self,n):
         M = None

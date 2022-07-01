@@ -8,14 +8,17 @@ import autograd
 from scipy.stats import norm
 from pyDOE import *
 from scipy.stats import uniform
+from scipy.stats import wishart
 
-from Test_Data import func1
+# from Test_Data import func1, NODE_hamil, getgrad_NODE
 
 import scipy.integrate
 solve_ivp = scipy.integrate.solve_ivp
+from utils import to_pickle, from_pickle
+import pickle
 
-input_dim1 = 3
-Nsamps = 40
+input_dim1 = 100
+Nsamps = 200
 # lhd = np.zeros((Nsamps+1,input_dim1))
 # lhd[0,:] = np.array([-4.81365419e+00, -2.97798186e-02])
 # lhd[1,:] = np.array([-5.62375103e+00,  5.59615650e-02])
@@ -75,23 +78,6 @@ Nsamps = 40
 # lhd[:,3] = norm(loc=0,scale=np.sqrt(1.e+01)).ppf(lhd0)
 # lhd[:,4] = norm(loc=0,scale=np.sqrt(1.e+02)).ppf(lhd0)
 
-# @primitive
-# def logsumexp(x):
-#     """Numerically stable log(sum(exp(x)))"""
-#     max_x = np.max(x)
-#     return max_x + np.log(np.sum(np.exp(x - max_x)))
-
-# def func1(coords):
-#     # print(coords)
-#     #******** 1D Gaussian Mixture #********
-#     q, p = np.split(coords,2)
-#     mu1 = 1.0
-#     mu2 = -1.0
-#     sigma = 0.25
-#     term1 = -np.log(0.5*(np.exp(-(q-mu1)**2/(2*sigma**2)))+0.5*(np.exp(-(q-mu2)**2/(2*sigma**2))))
-#     H = term1 + p**2/2 # Normal PDF
-#     return H
-
 def hamiltonian_fn(coords):
 
     #******** 1D Gaussian Mixture #********
@@ -106,27 +92,27 @@ def hamiltonian_fn(coords):
     # q1, q2, p1, p2 = np.split(coords,4)
     # sigma_inv = np.array([[1.,0.],[0.,1.]])
     # term1 = 0.
-    #
+    
     # mu = np.array([3.,0.])
     # y = np.array([q1-mu[0],q2-mu[1]])
     # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
     # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
-    #
+    
     # mu = np.array([-3.,0.])
     # y = np.array([q1-mu[0],q2-mu[1]])
     # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
     # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
-    #
+    
     # mu = np.array([0.,3.])
     # y = np.array([q1-mu[0],q2-mu[1]])
     # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
     # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
-    #
+    
     # mu = np.array([0.,-3.])
     # y = np.array([q1-mu[0],q2-mu[1]])
     # tmp1 = np.array([sigma_inv[0,0]*y[0]+sigma_inv[0,1]*y[1],sigma_inv[1,0]*y[0]+sigma_inv[1,1]*y[1]]).reshape(2)
     # term1 = term1 + 0.25*np.exp(-y[0]*tmp1[0] - y[1]*tmp1[1])
-    #
+    
     # term1 = -np.log(term1)
     # term2 = p1**2/2+p2**2/2
     # H = term1 + term2
@@ -216,14 +202,14 @@ def hamiltonian_fn(coords):
     # H = term1 + term2
     #
     # ******** nD Funnel #********
-    dic1 = np.split(coords,2*input_dim1)
-    term1 = dic1[0]**2/(2*3**2)
-    for ii in np.arange(1,input_dim1,1):
-        term1 = term1 + dic1[ii]**2/(2 * (2.718281828459045**(dic1[0] / 2))**2)
-    term2 = 0.0
-    for ii in np.arange(input_dim1,2*input_dim1,1):
-        term2 = term2 + dic1[ii]**2/2 # term2 + (dic1[ii]**2 * (2.718281828459045**(dic1[0] / 2))**2)/2
-    H = term1 + term2
+    # dic1 = np.split(coords,2*input_dim1)
+    # term1 = dic1[0]**2/(2*3**2)
+    # for ii in np.arange(1,input_dim1,1):
+    #     term1 = term1 + dic1[ii]**2/(2 * (2.718281828459045**(dic1[0] / 2))**2)
+    # term2 = 0.0
+    # for ii in np.arange(input_dim1,2*input_dim1,1):
+    #     term2 = term2 + dic1[ii]**2/2 # term2 + (dic1[ii]**2 * (2.718281828459045**(dic1[0] / 2))**2)/2
+    # H = term1 + term2
 
     # ********* nD Heirarchical (https://crackedbassoon.com/writing/funneling) *********
     # dic1 = np.split(coords,2*input_dim1)
@@ -270,6 +256,15 @@ def hamiltonian_fn(coords):
     # term2 = dic1[int(input_dim1)]**2/2
     # for ii in np.arange(int(input_dim1)+1,int(2*input_dim1),1):
     #     term2 = term2 + dic1[ii]**2/2
+    # H = term1 + term2
+
+    # ******** nD Gaussian with Wishart covariance #********
+    # dic1 = np.split(coords,2*input_dim1)
+    # with open('/Users/dhulls/Desktop/outfile.txt', 'r') as f:
+    #     sigma_inv = [[float(num) for num in line.split(',')] for line in f]
+    # sigma_inv = np.matrix(sigma_inv)
+    # term1 = np.array(0.5 * np.array(dic1[0:int(input_dim1)]).T * sigma_inv * np.array(dic1[0:int(input_dim1)])).reshape(1)
+    # term2 = np.array(0.5 * np.array(dic1[int(input_dim1):int(2*input_dim1)]).T * np.matrix(np.eye(input_dim1)) * np.array(dic1[int(input_dim1):int(2*input_dim1)])).reshape(1)
     # H = term1 + term2
 
     #
@@ -337,6 +332,27 @@ def hamiltonian_fn(coords):
     #     term2 = term2 + 1*dic1[ii]**2/2
     # H = term1 + term2
 
+    # ******** nD Gaussian with Wishart covariance #********
+    dic1 = np.split(coords,2*input_dim1)
+    sigma_inv = pickle.load(open("/Users/dhulls/Desktop/myfile.pkl", "rb"))
+    sigma_inv = np.array(sigma_inv)
+    term1 = 0.5 * np.matmul(np.matmul(np.array(dic1[0:int(input_dim1)]).T, sigma_inv), np.array(dic1[0:int(input_dim1)]))
+    term2 = 0.5 * np.matmul(np.array(dic1[int(input_dim1):int(2*input_dim1)]).T, np.array(dic1[int(input_dim1):int(2*input_dim1)]))
+    H = term1 + term2
+
+    #******** Neural ODE #********
+    
+    # dic1 = np.split(coords,2*input_dim1)
+    # init_params = convert_to_nn_tensor(dic1[0:int(input_dim1)], 5)
+    # func = ODEFuncGrad(init_params).to(device)
+    # pred_y = odeint(func.float(), batch_y0, batch_t).to(device)
+    # loss = torch.mean(torch.abs(pred_y - batch_y))
+    # term1 = loss.detach().numpy()
+    
+    # for ii in np.arange(0,2*input_dim1,1):
+    #     term1 = term1 + 1*dic1[ii]**2/2
+    # H = term1
+
     return H
 
 def leapfrog ( dydt, tspan, y0, n, dim ):
@@ -364,9 +380,19 @@ def leapfrog ( dydt, tspan, y0, n, dim ):
           y[(j+int(dim/2)),i] = y[(j+int(dim/2)),i-1] + 0.5 * dt * ( aold[(j+int(dim/2))] + anew[(j+int(dim/2))] )
   return y #t,
 
+def getgrad(coords):
+    dic1 = np.split(coords,2*input_dim1)
+    sigma_inv = pickle.load(open("/Users/dhulls/Desktop/myfile.pkl", "rb"))
+    sigma_inv = np.matrix(sigma_inv)
+    grad_req = np.zeros(2*input_dim1)
+    grad_req[0:input_dim1] = np.array(sigma_inv * np.array(dic1[0:int(input_dim1)])).reshape(input_dim1)
+    grad_req[int(input_dim1):int(2*input_dim1)] = np.array(dic1[int(input_dim1):int(2*input_dim1)]).reshape(input_dim1)
+    return grad_req
+
 def dynamics_fn(t, coords):
     # print("Here")
-    dcoords = autograd.grad(hamiltonian_fn)(coords) #  func1
+    # dcoords = autograd.grad(hamiltonian_fn)(coords) # func1
+    dcoords = getgrad(coords)
     dic1 = np.split(dcoords,2*input_dim1)
     S = np.concatenate([dic1[input_dim1]])
     for ii in np.arange(input_dim1+1,2*input_dim1,1):
@@ -375,7 +401,7 @@ def dynamics_fn(t, coords):
         S = np.concatenate([S, -dic1[ii]])
     return S
 
-def get_trajectory(t_span=[0,250], timescale=100, radius=None, y0=None, noise_std=0.01, **kwargs): # 30 20
+def get_trajectory(t_span=[0,250], timescale=40, radius=None, y0=None, noise_std=0.01, **kwargs): # 30 20
     t_eval = np.linspace(t_span[0], t_span[1], int(timescale*(t_span[1]-t_span[0])))
 
     if y0 is None:
@@ -401,51 +427,57 @@ def get_trajectory(t_span=[0,250], timescale=100, radius=None, y0=None, noise_st
     return dic1, ddic1, t_eval
 
 def get_dataset(seed=0, samples=Nsamps, test_split=1.0, **kwargs):
-    data = {'meta': locals()}
-    # randomly sample inputs
-    np.random.seed(seed) #
-    xs, dxs = [], []
-    index1 = 0
+    
+    data = from_pickle('/Users/dhulls/projects/Small Pf/hamiltonian-nn/nD_pdf/100D_Gaussian_1.pkl') # 100D_Gaussian.pkl
+    print("Successfully loaded data")
+    
+    # data = {'meta': locals()}
+    # # randomly sample inputs
+    # np.random.seed(seed) #
+    # xs, dxs = [], []
+    # index1 = 0
 
-    count1 = 0
-    # y_init = np.random.rand(40)
-    # y_init = np.array([-0.73442741,  0.87541503, -0.91145534,  2.23884429, -0.94334989, -0.43981041, -1.32755931, -1.07763671, -0.76373273, -0.04889701, -0.85163158, -1.53461637, -0.05483824, -1.02400955,  0.20548304, -1.16507185, -1.10568765, -0.66630082, -1.32053015, -0.86211622,  1.13940068, -1.23482582,  0.40234164, -0.68481009, -0.87079715, -0.57884966, -0.31155253,  0.05616534, -1.16514984,  0.90082649, 0.46566244, -1.53624369,  1.48825219,  1.89588918,  1.17877957, -0.17992484, 1.07075262,  1.05445173, -0.40317695,  1.22244507])
-    y_init = np.zeros(2*input_dim1)
-    for ii in np.arange(0,input_dim1,1):
-        y_init[ii] = 1.0 # lhd[count1,ii] # 0.0 # norm(loc=0,scale=1).rvs() #  lhd[count1,ii] # uniform(loc=-2,scale=4).rvs()
-    for ii in np.arange(input_dim1,2*input_dim1,1):
-        y_init[ii] = norm(loc=0,scale=1).rvs() # lhd_p[count1,ii] #
-        # if ii == input_dim1:
-        #     y_init[ii] = norm(loc=0,scale=1).rvs()
-        # else:
-        #     y_init[ii] = norm(loc=0,scale=(2.718281828459045**(y_init[0] / 2))**(-1)).rvs()
+    # count1 = 0
+    # # y_init = np.random.rand(40)
+    # # y_init = np.array([-0.73442741,  0.87541503, -0.91145534,  2.23884429, -0.94334989, -0.43981041, -1.32755931, -1.07763671, -0.76373273, -0.04889701, -0.85163158, -1.53461637, -0.05483824, -1.02400955,  0.20548304, -1.16507185, -1.10568765, -0.66630082, -1.32053015, -0.86211622,  1.13940068, -1.23482582,  0.40234164, -0.68481009, -0.87079715, -0.57884966, -0.31155253,  0.05616534, -1.16514984,  0.90082649, 0.46566244, -1.53624369,  1.48825219,  1.89588918,  1.17877957, -0.17992484, 1.07075262,  1.05445173, -0.40317695,  1.22244507])
+    # y_init = np.zeros(2*input_dim1)
+    # for ii in np.arange(0,input_dim1,1):
+    #     y_init[ii] = 1.0 # lhd[count1,ii] # 0.0 # norm(loc=0,scale=1).rvs() #  lhd[count1,ii] # uniform(loc=-2,scale=4).rvs()
+    # for ii in np.arange(input_dim1,2*input_dim1,1):
+    #     y_init[ii] = norm(loc=0,scale=1).rvs() # lhd_p[count1,ii] #
+    #     # if ii == input_dim1:
+    #     #     y_init[ii] = norm(loc=0,scale=1).rvs()
+    #     # else:
+    #     #     y_init[ii] = norm(loc=0,scale=(2.718281828459045**(y_init[0] / 2))**(-1)).rvs()
 
-    for s in range(samples):
-        print(s)
-        dic1, ddic1, t = get_trajectory(y0=y_init,**kwargs) #
-        # print(dic1)
-        xs.append(np.stack( [dic1[ii].T.reshape(len(dic1[ii].T)) for ii in np.arange(0,2*input_dim1,1)]).T)
-        dxs.append(np.stack( [ddic1[ii].T.reshape(len(ddic1[ii].T)) for ii in np.arange(0,2*input_dim1,1)]).T)
-        y_init = np.zeros(2*input_dim1)
-        count1 = count1 + 1
-        for ii in np.arange(0,input_dim1,1):
-            y_init[ii] = dic1[ii].T[len(dic1[ii].T)-1] #  lhd[count1,ii] #  uniform(loc=-2,scale=4).rvs() # lhd[count1,ii] #
-        for ii in np.arange(input_dim1,2*input_dim1,1):
-            y_init[ii] = norm(loc=0,scale=1).rvs() # lhd_p[count1,ii] #
-            # if ii == input_dim1:
-            #     y_init[ii] = norm(loc=0,scale=1).rvs()
-            # else:
-            #     y_init[ii] = norm(loc=0,scale=(2.718281828459045**(y_init[0] / 2))**(-1)).rvs()
+    # for s in range(samples):
+    #     print(s)
+    #     dic1, ddic1, t = get_trajectory(y0=y_init,**kwargs) #
+    #     # print(dic1)
+    #     xs.append(np.stack( [dic1[ii].T.reshape(len(dic1[ii].T)) for ii in np.arange(0,2*input_dim1,1)]).T)
+    #     dxs.append(np.stack( [ddic1[ii].T.reshape(len(ddic1[ii].T)) for ii in np.arange(0,2*input_dim1,1)]).T)
+    #     y_init = np.zeros(2*input_dim1)
+    #     count1 = count1 + 1
+    #     for ii in np.arange(0,input_dim1,1):
+    #         y_init[ii] = dic1[ii].T[len(dic1[ii].T)-1] #  lhd[count1,ii] #  uniform(loc=-2,scale=4).rvs() # lhd[count1,ii] #
+    #     for ii in np.arange(input_dim1,2*input_dim1,1):
+    #         y_init[ii] = norm(loc=0,scale=1).rvs() # lhd_p[count1,ii] #
+    #         # if ii == input_dim1:
+    #         #     y_init[ii] = norm(loc=0,scale=1).rvs()
+    #         # else:
+    #         #     y_init[ii] = norm(loc=0,scale=(2.718281828459045**(y_init[0] / 2))**(-1)).rvs()
 
-    data['coords'] = np.concatenate(xs)
-    data['dcoords'] = np.concatenate(dxs).squeeze()
+    # data['coords'] = np.concatenate(xs)
+    # data['dcoords'] = np.concatenate(dxs).squeeze()
 
-    # make a train/test split
-    split_ix = int(len(data['coords']) * test_split)
-    split_data = {}
-    for k in ['coords', 'dcoords']:
-        split_data[k], split_data['test_' + k] = data[k][:split_ix], data[k][split_ix:]
-    data = split_data
+    # # make a train/test split
+    # split_ix = int(len(data['coords']) * test_split)
+    # split_data = {}
+    # for k in ['coords', 'dcoords']:
+    #     split_data[k], split_data['test_' + k] = data[k][:split_ix], data[k][split_ix:]
+    # data = split_data
+    # path = '{}/{}.pkl'.format('/Users/dhulls/projects/Small Pf/hamiltonian-nn/nD_pdf', '100D_Gaussian_1')
+    # to_pickle(data, path)
     return data
 
 def get_field(xmin=-1.2, xmax=1.2, ymin=-1.2, ymax=1.2, gridsize=20):
