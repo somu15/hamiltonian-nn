@@ -75,9 +75,23 @@ lhd[40,:] = np.array([ 1.,1.])
 
 ## 10D Rosenbrock ##
 10D_Rosenbrock: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
+10D_Rosenbrock_1: 100 Neurons, 5e-4 learning rate, 100000 steps, 80 training samples, 250 time length, 40 steps per length, 1000 training batch size
 
 ## 24D Logistic regression ##
 24D_Bayesian_Logistic: 100 Neurons, 5e-4 learning rate, 100000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
+
+## 100D Gaussian from NUTS paper ##
+100D_Gaussian: 500 Neurons, 1-4 learning rate, 25000 steps, 80 training samples, 250 time length, 40 steps per length, 1000 training batch size
+100D_Gaussian_1: 500 Neurons, 1-4 learning rate, 50000 steps, 200 training samples, 250 time length, 40 steps per length, 1000 training batch size
+100D_Gaussian_2: 500 Neurons, 1-4 learning rate, 75000 steps, 200 training samples, 250 time length, 40 steps per length, 1000 training batch size
+100D_Gaussian_3: 500 Neurons, 1-4 (first 75000) and 5-5 (next 25000) learning rate, 100000 steps, 200 training samples, 250 time length, 40 steps per length, 1000 training batch size
+
+100D_Gaussian_10000: 100 error threshold and 2 cool down samples used with 100D_Gaussian_1
+100D_Gaussian_10000_new: 100 error threshold and 2 cool down samples used with 100D_Gaussian_3
+
+## 250D Gaussian from NUTS paper ##
+250D_Gaussian: 1000 Neurons, 5e-4 learning rate, 10000 steps, 40 training samples, 250 time length, 40 steps per length, 1000 training batch size
+250D_Gaussian1: 500 (1 hidden layer) Neurons, 5e-4 learning rate, 10000 steps, 40 training samples, 250 time length, 40 steps per length, 500 training batch size
 
 ************************************ OUTDATED ************************************
 ## 3D Rosenbrock (Outdated) ##
